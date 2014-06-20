@@ -17,4 +17,28 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 """
 
 
+class MasterConfig (object):
+    """Global configuration for master"""
+    config_dict = {
+        "working_user": "wfs",
+        "working_group": "wfs",
+
+        "customer_port": 12180,
+        "master_port": 12181,
+        "data_port": 12182,
+        
+        "max_concurrency_visit": 100
+    }
+
+
+class DataConfig (object):
+    """Global configuration for data server"""
+    config_dist = {
+        "working_user": "wfs",
+        "working_group": "wfs",
+
+        "master_port": 12181,
+        "master_port": 12182,
+    }
+
 
