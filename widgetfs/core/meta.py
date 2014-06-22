@@ -17,38 +17,26 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 """
 
 
-class CommonConfig (object):
-    """Global configuration for common"""
-    config_dict = {
-        "chunk_size": 1024*1024*64,
-        "block_size": 1024*64,
-    }
+class WfsChunk (object):
+    """Chunk in Widget file system"""
+    def __init__ (self, num, ver, ds_list):
+        self.number = num
+        self.version = ver
+        self.data_server_list = ds_list
+        self.chunk_path = get_chunk_path()
+
+    def get_chunk_path(self):
+        pass
 
 
-class MasterConfig (object):
-    """Global configuration for master"""
-    config_dict = {
-        "working_user": "wfs",
-        "working_group": "wfs",
+class WfsFile (object):
+    """File in Widget file system"""
+    def __init__ (self, fname):
+        self.file_name = fname
 
-        "customer_port": 12180,
-        "master_port": 12181,
-        "data_port": 12182,
+
+class WfsDir (object):
+    """Directory in Widget file system"""
+    def __init__ (self, dname):
+        self.dir_name = dname
         
-        "max_concurrency_visit": 100,
-    }
-
-    
-class DataConfig (object):
-    """Global configuration for data server"""
-    config_dist = {
-        "working_user": "wfs",
-        "working_group": "wfs",
-
-        "master_port": 12181,
-        "master_port": 12182,
-
-        "data_path": "/mnt/wfs",
-    }
-
-
