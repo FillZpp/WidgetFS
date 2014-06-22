@@ -27,7 +27,7 @@ class CommonConfig (object):
 
 class MasterConfig (object):
     """Global configuration for master"""
-    config_dict = {
+    cfg_dict = {
         "working_user": "wfs",
         "working_group": "wfs",
 
@@ -41,14 +41,23 @@ class MasterConfig (object):
     
 class DataConfig (object):
     """Global configuration for data server"""
-    config_dist = {
-        "working_user": "wfs",
-        "working_group": "wfs",
-
+    cfg_dist = {
         "master_port": 12181,
         "master_port": 12182,
 
         "data_path": "/mnt/wfs",
     }
+
+
+def check_config (cfg_list, ClassConfig):
+    for cfg in cfg_list:
+        cfg = cfg.strip()
+        if not cfg or cfg[0] == '#':
+            continue
+
+        mkey, mvalue = [s.strip() for s in cfg.split('=')]
+        if ClassConfig.cfg_dict.has_key(mkey):
+            ClassConfig.cf
+g_dict[mkey] = mvalue
 
 

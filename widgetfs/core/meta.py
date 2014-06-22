@@ -23,7 +23,7 @@ class WfsChunk (object):
         self.number = num
         self.version = ver
         self.data_server_list = ds_list
-        self.chunk_path = get_chunk_path()
+        self.chunk_path = self.get_chunk_path()
 
     def get_chunk_path(self):
         pass
@@ -39,4 +39,6 @@ class WfsDir (object):
     """Directory in Widget file system"""
     def __init__ (self, dname):
         self.dir_name = dname
-        
+
+
+
