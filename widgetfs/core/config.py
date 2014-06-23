@@ -58,6 +58,6 @@ def check_config (cfg_list, ClassConfig):
         mkey, mvalue = [s.strip() for s in cfg.split('=')]
         if ClassConfig.cfg_dict.has_key(mkey):
             ClassConfig.cf
-g_dict[mkey] = mvalue
+            g_dict[mkey] = mvalue
 
 

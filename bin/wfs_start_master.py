@@ -21,31 +21,56 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 import os
 import sys
+import time
+import ctypes
 wfs_home_path = os.environ.get('WFS_HOME')
 if not wfs_home_path:
-    sys.stderr.write('Error:\nYou should define environment variable WFS_HOME first.\n')
+    sys.stderr.write('Error:\n' +
+                     'You should define environment variable WFS_HOME first.\n')
     sys.exit(-1)
 sys.path.append(wfs_home_path)
 import widgetfs.core.config
 import widgetfs.core.meta
 
 
+pid_file = 'var/run/widgetfs.pid'
+
+
+def set_run_pid ():
+    print wfs_home_path + '/' + pid_file
+    try:
+        os.mknod (wfs_home_path + '/' + pid_file)
+    except OSError, e:
+        print os.getcwd()
+        print e.errno, e.strerror
+        sys.stderr.write ('Error:\nWidgetFS is already running.\n')
+        sys.exit(-1)
+    with open(pid_file) as ff:
+        ff.write(os.getpid())
+
+
 def daemon_work ():
-    # read and check the configuration file
     os.chdir(wfs_home_path)
+    #set_run_pid()
+    # read and check the configuration file
     with open('etc/wfs_master.cfg') as ff:
         cfg_list = ff.readlines()
     widgetfs.core.config.check_config (cfg_list,
                                        widgetfs.core.config.MasterConfig)
 
+    time.sleep(20)
+    os.remove(pid_file)
+    
 
 if __name__ == '__main__':
+    set_run_pid()
+    print 'ok'
     try:
         pid = os.fork()
         if pid > 0:
             sys.exit(0)
     except OSError, e:
-        sys.stderr.write ('Error:\n fork failed: %d (%s)'
+        sys.stderr.write ('Error:\n fork failed: %d (%s).\n'
                           % (e.errno, e.strerror))
         sys.exit(1)
 
@@ -55,10 +80,10 @@ if __name__ == '__main__':
     try:
         pid = os.fork()
         if pid > 0:
-            print ('WidgetFS starts in pid %d' % pid)
+            print ('WidgetFS starts in pid %d.' % pid)
             sys.exit(0)
     except OSError, e:
-        os.stderr.write ('Error:\n fork failed: %d (%s)'
+        os.stderr.write ('Error:\n fork failed: %d (%s).\n'
                          % (e.errno, e.strerror))
         sys.exit(1)
 
