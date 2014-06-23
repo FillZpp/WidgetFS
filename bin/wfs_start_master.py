@@ -37,21 +37,20 @@ pid_file = 'var/run/widgetfs.pid'
 
 
 def set_run_pid ():
-    print wfs_home_path + '/' + pid_file
     try:
-        os.mknod (wfs_home_path + '/' + pid_file)
+        os.mknod (pid_file)
     except OSError, e:
-        print os.getcwd()
         print e.errno, e.strerror
         sys.stderr.write ('Error:\nWidgetFS is already running.\n')
         sys.exit(-1)
-    with open(pid_file) as ff:
-        ff.write(os.getpid())
+    pid = str(os.getpid()) + '\n'
+    with open(pid_file, 'w') as ff:
+        ff.write(pid)
 
 
 def daemon_work ():
     os.chdir(wfs_home_path)
-    #set_run_pid()
+    set_run_pid()
     # read and check the configuration file
     with open('etc/wfs_master.cfg') as ff:
         cfg_list = ff.readlines()
@@ -63,8 +62,6 @@ def daemon_work ():
     
 
 if __name__ == '__main__':
-    set_run_pid()
-    print 'ok'
     try:
         pid = os.fork()
         if pid > 0:
@@ -74,9 +71,7 @@ if __name__ == '__main__':
                           % (e.errno, e.strerror))
         sys.exit(1)
 
-    os.chdir('/')
     os.setsid()
-    os.umask(0)
     try:
         pid = os.fork()
         if pid > 0:
