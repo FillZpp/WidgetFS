@@ -17,47 +17,41 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 """
 
 
-class CommonConfig (object):
-    """Global configuration for common"""
-    config_dict = {
-        "chunk_size": 1024*1024*64,
-        "block_size": 1024*64,
+class WfsConfig (object):
+    """Global configuration for WidgetFS"""
+    common_cfg = {
+        'chunk_size': 1024*1024*64,
+        'block_size': 1024*64,
     }
 
+    master_cfg = {
+        'working_user': 'wfs',
+        'working_group': 'wfs',
 
-class MasterConfig (object):
-    """Global configuration for master"""
-    cfg_dict = {
-        "working_user": "wfs",
-        "working_group": "wfs",
-
-        "customer_port": 12180,
-        "master_port": 12181,
-        "data_port": 12182,
+        'customer_port': 12180,
+        'master_port': 12181,
+        'data_port': 12182,
         
-        "max_concurrency_visit": 100,
+        'max_concurrency_visit': 100,
+        'pid_file': 'var/run/wfs_master.pid'
     }
 
+    dserver_cfg = {
+        'master_port': 12181,
+        'master_port': 12182,
+
+        'data_path': '/mnt/wfs',
+    }
     
-class DataConfig (object):
-    """Global configuration for data server"""
-    cfg_dist = {
-        "master_port": 12181,
-        "master_port": 12182,
 
-        "data_path": "/mnt/wfs",
-    }
-
-
-def check_config (cfg_list, ClassConfig):
+def wfs_check_config (cfg_list, cfg_dict):
     for cfg in cfg_list:
         cfg = cfg.strip()
         if not cfg or cfg[0] == '#':
             continue
 
         mkey, mvalue = [s.strip() for s in cfg.split('=')]
-        if ClassConfig.cfg_dict.has_key(mkey):
-            ClassConfig.cf
+        if cfg_dict.has_key(mkey):
             g_dict[mkey] = mvalue
 
 

@@ -29,39 +29,39 @@ if not wfs_home_path:
                      'You should define environment variable WFS_HOME first.\n')
     sys.exit(-1)
 sys.path.append(wfs_home_path)
-import widgetfs.core.config
-import widgetfs.core.meta
-
-
-pid_file = 'var/run/widgetfs.pid'
+from widgetfs.core.config import WfsConfig, wfs_check_config
 
 
 def set_run_pid ():
+    pid_file = WfsConfig.master_cfg['pid_file']
+
+    # check if wfs master is running
     try:
         os.mknod (pid_file)
     except OSError, e:
         print e.errno, e.strerror
         sys.stderr.write ('Error:\nWidgetFS is already running.\n')
         sys.exit(-1)
-    pid = str(os.getpid()) + '\n'
+        
+    pid = str(os.getpid())
     with open(pid_file, 'w') as ff:
-        ff.write(pid)
+        ff.write(pid + '\n')
+    print ('WidgetFS starts on pid %s' % pid)
 
 
 def daemon_work ():
-    os.chdir(wfs_home_path)
-    set_run_pid()
     # read and check the configuration file
     with open('etc/wfs_master.cfg') as ff:
         cfg_list = ff.readlines()
-    widgetfs.core.config.check_config (cfg_list,
-                                       widgetfs.core.config.MasterConfig)
+    wfs_check_config(cfg_list, WfsConfig.master_cfg)
 
-    time.sleep(20)
+    set_run_pid()
+    time.sleep(10)
     os.remove(pid_file)
     
 
 if __name__ == '__main__':
+    os.chdir(wfs_home_path)
     try:
         pid = os.fork()
         if pid > 0:
@@ -75,7 +75,6 @@ if __name__ == '__main__':
     try:
         pid = os.fork()
         if pid > 0:
-            print ('WidgetFS starts in pid %d.' % pid)
             sys.exit(0)
     except OSError, e:
         os.stderr.write ('Error:\n fork failed: %d (%s).\n'
