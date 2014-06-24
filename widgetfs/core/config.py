@@ -28,7 +28,7 @@ class WfsConfig (object):
         'working_user': 'wfs',
         'working_group': 'wfs',
 
-        'customer_port': 12180,
+        'client_port': 12180,
         'master_port': 12181,
         'data_port': 12182,
         
