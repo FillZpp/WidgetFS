@@ -20,15 +20,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 import os
 import sys
 import time
-from widgetfs.core.config import WfsConfig, wfs_check_config
-from widgetfs.meta.master_meta import read_meta
+from widgetfs.config import WfsConfig, wfs_check_config
+from widgetfs.meta import read_meta
 
 
-def set_run_pid(var_path):
+def set_master_pid(var_path):
     pid_dir = os.path.normpath(var_path + 'mrun/')
     pid_file = os.path.normpath(var_path + 'mrun/wfs_master.pid')
 
-    # check if wfs dserver is running
+    # check if wfs master is running
     try:
         os.mkdir(pid_dir)
     except FileExistsError:
@@ -41,7 +41,25 @@ def set_run_pid(var_path):
     print('WidgetFS master starts on pid %s.' % pid)
 
 
-def daemon_work():
+def set_dserver_pid(var_path):
+    pid_dir = os.path.normpath(var_path + 'drun/')
+    pid_file = os.path.normpath(var_path + 'drun/wfs_dserver.pid')
+
+    # check if wfs data server is running
+    try:
+        os.mkdir(pid_dir)
+    except FileExistsError:
+        sys.stderr.write('Error:\nWidgetFS data server is already running.\n')
+    
+    # write in current pid
+    pid = str(os.getpid())
+    with open(pid_file, 'w') as ff:
+        ff.write(pid + '\n')
+    print('WidgetFS data server starts on pid %s.' % pid)
+
+    
+
+def daemon_work(server):
     # read and check the configuration file
     with open('etc/wfs_master.cfg', 'r') as ff:
         cfg_list = ff.readlines()
@@ -49,10 +67,13 @@ def daemon_work():
 
     var_path = WfsConfig.common_cfg['var_path']
     # create pid file
-    set_run_pid(var_path)
+    if server == 'master':
+        set_master_pid(var_path)
+    else:
+        set_dserver_pid(var_path)
 
     # read dserver.meta
-    root_dir = read_meta(var_path)
+    root_dir = read_meta(var_path, server)
     
     time.sleep(100)
 

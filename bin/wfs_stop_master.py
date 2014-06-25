@@ -29,7 +29,7 @@ if not wfs_home_path:
                      'You should define environment variable WFS_HOME first.\n')
     sys.exit(-1)
 sys.path.append(wfs_home_path)
-from widgetfs.core.config import WfsConfig, wfs_check_config
+from widgetfs.config import WfsConfig, wfs_check_config
 
 
 def main ():

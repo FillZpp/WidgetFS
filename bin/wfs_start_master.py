@@ -28,7 +28,7 @@ if not wfs_home_path:
                      'You should define environment variable WFS_HOME first.\n')
     sys.exit(-1)
 sys.path.append(wfs_home_path)
-from widgetfs.daemon.master_daemon import daemon_work
+from widgetfs.daemon import daemon_work
 
 
 def main ():
@@ -52,8 +52,7 @@ def main ():
                         % (e.errno, e.strerror))
         sys.exit(1)
 
-    daemon_work()
-    print('WidgetFS master end.')
+    daemon_work('master')
 
 
 if __name__ == '__main__':

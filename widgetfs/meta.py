@@ -19,11 +19,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 import os
 import pickle
-from widgetfs.core.codef import WfsDir
+from widgetfs.codef import WfsDir
 
 
-def read_meta(var_path):
-    meta_file = os.path.normpath(var_path + 'master.meta')
+def read_meta(var_path, server):
+    meta_file = os.path.normpath(var_path + server + '.meta')
     try:
         with open(meta_file, 'rb') as ff:
             root_dir = pickle.load(ff)
