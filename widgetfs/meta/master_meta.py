@@ -16,29 +16,19 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 
+
+import os
+import pickle
+from widgetfs.core.codef import WfsDir
+
+
+def read_meta(var_path):
+    meta_file = os.path.normpath(var_path + 'master.meta')
+    try:
+        with open(meta_file, 'rb') as ff:
+            root_dir = pickle.load(ff)
+    except FileNotFoundError:
+        root_dir = WfsDir('/', '')
+        
+    return root_dir
     
-class WfsChunk (object):
-    """Chunk in Widget file system"""
-    def __init__ (self, num, ver, ds_list):
-        self.number = num
-        self.version = ver
-        self.data_server_list = ds_list
-        self.chunk_path = self.get_chunk_path()
-
-    def get_chunk_path(self):
-        pass
-
-
-class WfsFile (object):
-    """File in Widget file system"""
-    def __init__ (self, fname):
-        self.file_name = fname
-
-
-class WfsDir (object):
-    """Directory in Widget file system"""
-    def __init__ (self, dname):
-        self.dir_name = dname
-
-
-

@@ -1,6 +1,3 @@
-#! /usr/bin/env python
-
-
 """
 Copyright (C) 2014 FillZpp
 
@@ -22,40 +19,42 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 import os
 import sys
-import signal
-wfs_home_path = os.environ.get('WFS_HOME')
-if not wfs_home_path:
-    sys.stderr.write('Error:\n' +
-                     'You should define environment variable WFS_HOME first.\n')
-    sys.exit(-1)
-sys.path.append(wfs_home_path)
+import pickle
+import time
 from widgetfs.core.config import WfsConfig, wfs_check_config
+from widgetfs.meta.dserver_meta import read_meta
 
 
-def main ():
-    os.chdir(wfs_home_path)
-
-    # read and check the configuration file
-    with open('etc/wfs_master.cfg') as ff:
-        cfg_list = ff.readlines()
-    wfs_check_config(cfg_list, WfsConfig.master_cfg)
-
-    var_path = WfsConfig.common_cfg['var_path']
+def set_run_pid(var_path):
     pid_dir = os.path.normpath(var_path + 'drun/')
     pid_file = os.path.normpath(var_path + 'drun/wfs_dserver.pid')
-    
-    # read and check pid file
-    if not os.path.isfile(pid_file):
-        sys.stderr.write('Error:\nNo running WidgetFS data server.\n')
+
+    # check if wfs dserver is running
+    try:
+        os.mkdir(pid_dir)
+    except FileExistsError:
+        sys.stderr.write('Error:\nWidgetFS data server is already running.\n')
         sys.exit(-1)
+    
+    # write in current pid
+    pid = str(os.getpid())
+    with open(pid_file, 'w') as ff:
+        ff.write(pid + '\n')
+    print('WidgetFS data server starts on pid %s.' % pid)
 
-    with open(pid_file, 'r') as ff:
-        pid = ff.readline()
 
-    os.remove(pid_file)
-    os.rmdir(pid_dir)
-    os.kill(int(pid), signal.SIGKILL)
+def daemon_work():
+    # read and check the configuration file
+    with open('etc/wfs_dserver.cfg', 'r') as ff:
+        cfg_list = ff.readlines()
+    wfs_check_config(cfg_list, WfsConfig.dserver_cfg)
 
+    var_path = WfsConfig.common_cfg['var_path']
+    # create pid file
+    set_run_pid(var_path)
 
-if __name__ == '__main__':
-    main()
+    # read dserver.meta
+    chunk_list = read_meta(var_path)
+    
+    time.sleep(100)
+

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+
 """
 Copyright (C) 2014 FillZpp
 
@@ -21,55 +22,23 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 import os
 import sys
-import time
 wfs_home_path = os.environ.get('WFS_HOME')
 if not wfs_home_path:
     sys.stderr.write('Error:\n' +
                      'You should define environment variable WFS_HOME first.\n')
     sys.exit(-1)
 sys.path.append(wfs_home_path)
-from widgetfs.core.config import WfsConfig, wfs_check_config
-
-
-def set_run_pid():
-    var_path = WfsConfig.common_cfg['var_path']
-    pid_dir = os.path.normpath(var_path + 'drun/')
-    pid_file = os.path.normpath(pid_dir + 'wfs_dserver.pid')
-
-    # check if wfs dserver is running
-    try:
-        os.mkdir(pid_dir)
-    except FileExistsError:
-        sys.stderr.write('Error:\nWidgetFS data server is already running.\n')
-    
-    # write in current pid
-    pid = str(os.getpid())
-    with open(pid_file, 'w') as ff:
-        ff.write(pid + '\n')
-    print('WidgetFS data server starts on pid %s.' % pid)
-
-def daemon_work():
-    os.chdir(wfs_home_path)
-
-    # read and check the configuration file
-    with open('etc/wfs_dserver.cfg', 'r') as ff:
-        cfg_list = ff.readlines()
-    wfs_check_config(cfg_list, WfsConfig.dserver_cfg)
-
-    # create pid file
-    set_run_pid()
-
-    
-    time.sleep(100)
+from widgetfs.daemon.dserver_daemon import daemon_work
 
 
 def main ():
+    os.chdir(wfs_home_path)
     try:
         pid = os.fork()
         if pid > 0:
             sys.exit(0)
     except OSError as e:
-        sys.stderr.write('Error:\n fork failed: %d (%s).\n'
+        sys.stderr.write('Error:\nWidgetFS master fork 1 failed: %d (%s).\n'
                          % (e.errno, e.strerror))
         sys.exit(1)
 
@@ -79,7 +48,7 @@ def main ():
         if pid > 0:
             sys.exit(0)
     except OSError as e:
-        os.stderr.write('Error:\n fork failed: %d (%s).\n'
+        os.stderr.write('Error:\nWidgetFS master fork 2 failed: %d (%s).\n'
                         % (e.errno, e.strerror))
         sys.exit(1)
 

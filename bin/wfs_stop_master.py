@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+
 """
 Copyright (C) 2014 FillZpp
 
@@ -41,7 +42,7 @@ def main ():
 
     var_path = WfsConfig.common_cfg['var_path']
     pid_dir = os.path.normpath(var_path + 'mrun/')
-    pid_file = os.path.normpath(pid_dir + 'wfs_master.pid')
+    pid_file = os.path.normpath(var_path + 'mrun/wfs_master.pid')
     
     # read and check pid file
     if not os.path.isfile(pid_file):

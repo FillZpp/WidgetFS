@@ -17,8 +17,16 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 """
 
 
-from data_meta import WfsChunk, WfsFile, WfsDir
+import os
+import pickle
 
 
-def deal_master_meta():
-    pass
+def read_meta(var_path):
+    meta_file = os.path.normpath(var_path + 'dserver.meta')
+    try:
+        with open(meta_file, 'rb') as ff:
+            chunk_list = pickle.load(ff)
+    except FileNotFoundError:
+        chunk_list = []
+
+    return chunk_list 
