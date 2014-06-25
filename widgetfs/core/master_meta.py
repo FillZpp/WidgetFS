@@ -16,29 +16,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 
-    
-class WfsChunk (object):
-    """Chunk in Widget file system"""
-    def __init__ (self, num, ver, ds_list):
-        self.number = num
-        self.version = ver
-        self.data_server_list = ds_list
-        self.chunk_path = self.get_chunk_path()
 
-    def get_chunk_path(self):
-        pass
+from data_meta import WfsChunk, WfsFile, WfsDir
 
 
-class WfsFile (object):
-    """File in Widget file system"""
-    def __init__ (self, fname):
-        self.file_name = fname
-
-
-class WfsDir (object):
-    """Directory in Widget file system"""
-    def __init__ (self, dname):
-        self.dir_name = dname
-
-
-
+def deal_master_meta():
+    pass

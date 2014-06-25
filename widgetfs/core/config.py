@@ -22,6 +22,7 @@ class WfsConfig (object):
     common_cfg = {
         'chunk_size': 1024*1024*64,
         'block_size': 1024*64,
+        'var_path': 'var/',
     }
 
     master_cfg = {
@@ -31,9 +32,9 @@ class WfsConfig (object):
         'client_port': 12180,
         'master_port': 12181,
         'data_port': 12182,
-        
+
+        # configurations not in wfs_master.cfg
         'max_concurrency_visit': 100,
-        'pid_file': 'var/run/wfs_master.pid'
     }
 
     dserver_cfg = {

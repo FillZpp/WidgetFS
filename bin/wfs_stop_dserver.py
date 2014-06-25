@@ -40,12 +40,12 @@ def main ():
     wfs_check_config(cfg_list, WfsConfig.master_cfg)
 
     var_path = WfsConfig.common_cfg['var_path']
-    pid_dir = os.path.normpath(var_path + 'mrun/')
-    pid_file = os.path.normpath(pid_dir + 'wfs_master.pid')
+    pid_dir = os.path.normpath(var_path + 'drun/')
+    pid_file = os.path.normpath(pid_dir + 'wfs_dserver.pid')
     
     # read and check pid file
     if not os.path.isfile(pid_file):
-        sys.stderr.write('Error:\nNo running WidgetFS master.\n')
+        sys.stderr.write('Error:\nNo running WidgetFS data server.\n')
         sys.exit(-1)
 
     with open(pid_file, 'r') as ff:
@@ -58,6 +58,3 @@ def main ():
 
 if __name__ == '__main__':
     main()
-
-
-
