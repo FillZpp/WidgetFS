@@ -21,16 +21,37 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 import os
 import sys
-import time
-import ctypes
 wfs_home_path = os.environ.get('WFS_HOME')
 if not wfs_home_path:
     sys.stderr.write('Error:\n' +
                      'You should define environment variable WFS_HOME first.\n')
     sys.exit(-1)
 sys.path.append(wfs_home_path)
-import widgetfs.core.config
-import widgetfs.core.meta
+from widgetfs.core.config import WfsConfig, wfs_check_config
+
+
+def main ():
+    os.chdir(wfs_home_path)
+
+    # read and check the configuration file
+    with open('etc/wfs_master.cfg') as ff:
+        cfg_list = ff.readlines()
+    wfs_check_config(cfg_list, WfsConfig.master_cfg)
+    pid_file = WfsConfig.master_cfg['pid_file']
+    
+    # read and check pid file
+    if not os.path.isfile(pid_file):
+        sys.stderr.write('Error:\nNo running WidgetFS\n')
+        sys.exit(-1)
+
+    with open(pid_file, 'r') as ff:
+        pid = ff.readline()
+
+    os.kill(pid)
+
+
+if __name__ == '__main__':
+    main()
 
 
 

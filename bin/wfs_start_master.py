@@ -22,7 +22,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 import os
 import sys
 import time
-import ctypes
 wfs_home_path = os.environ.get('WFS_HOME')
 if not wfs_home_path:
     sys.stderr.write('Error:\n' +
@@ -37,7 +36,7 @@ def set_run_pid ():
 
     # check if wfs master is running
     try:
-        os.mknod (pid_file)
+        os.mknod(pid_file)
     except OSError, e:
         print e.errno, e.strerror
         sys.stderr.write ('Error:\nWidgetFS is already running.\n')
@@ -46,7 +45,7 @@ def set_run_pid ():
     pid = str(os.getpid())
     with open(pid_file, 'w') as ff:
         ff.write(pid + '\n')
-    print ('WidgetFS starts on pid %s' % pid)
+    print('WidgetFS starts on pid %s' % pid)
 
 
 def daemon_work ():
@@ -60,15 +59,15 @@ def daemon_work ():
     os.remove(pid_file)
     
 
-if __name__ == '__main__':
+def main ():
     os.chdir(wfs_home_path)
     try:
         pid = os.fork()
         if pid > 0:
             sys.exit(0)
     except OSError, e:
-        sys.stderr.write ('Error:\n fork failed: %d (%s).\n'
-                          % (e.errno, e.strerror))
+        sys.stderr.write('Error:\n fork failed: %d (%s).\n'
+                         % (e.errno, e.strerror))
         sys.exit(1)
 
     os.setsid()
@@ -77,11 +76,14 @@ if __name__ == '__main__':
         if pid > 0:
             sys.exit(0)
     except OSError, e:
-        os.stderr.write ('Error:\n fork failed: %d (%s).\n'
-                         % (e.errno, e.strerror))
+        os.stderr.write('Error:\n fork failed: %d (%s).\n'
+                        % (e.errno, e.strerror))
         sys.exit(1)
 
     daemon_work()
-    print ('WidgetFS end')
+    print('WidgetFS end')
 
+
+if __name__ == '__main__':
+    main()
 

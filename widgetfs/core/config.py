@@ -37,6 +37,7 @@ class WfsConfig (object):
     }
 
     dserver_cfg = {
+        'master_host': '',
         'master_port': 12181,
         'master_port': 12182,
 
