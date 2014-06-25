@@ -21,6 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 import os
 import sys
+import signal
 wfs_home_path = os.environ.get('WFS_HOME')
 if not wfs_home_path:
     sys.stderr.write('Error:\n' +
@@ -47,7 +48,8 @@ def main ():
     with open(pid_file, 'r') as ff:
         pid = ff.readline()
 
-    os.kill(pid)
+    os.remove(pid_file)
+    os.kill(int(pid), signal.SIGKILL)
 
 
 if __name__ == '__main__':

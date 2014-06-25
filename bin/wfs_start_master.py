@@ -41,7 +41,8 @@ def set_run_pid ():
         print e.errno, e.strerror
         sys.stderr.write ('Error:\nWidgetFS is already running.\n')
         sys.exit(-1)
-        
+
+    # write in current pid
     pid = str(os.getpid())
     with open(pid_file, 'w') as ff:
         ff.write(pid + '\n')
@@ -49,18 +50,19 @@ def set_run_pid ():
 
 
 def daemon_work ():
+    os.chdir(wfs_home_path)
+    
     # read and check the configuration file
     with open('etc/wfs_master.cfg') as ff:
         cfg_list = ff.readlines()
     wfs_check_config(cfg_list, WfsConfig.master_cfg)
 
     set_run_pid()
-    time.sleep(10)
-    os.remove(pid_file)
+
+    time.sleep(100)
     
 
 def main ():
-    os.chdir(wfs_home_path)
     try:
         pid = os.fork()
         if pid > 0:
