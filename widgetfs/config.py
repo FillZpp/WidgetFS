@@ -17,36 +17,35 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 """
 
 
-class WfsConfig (object):
-    """Global configuration for WidgetFS"""
-    common_cfg = {
-        'chunk_size': 1024*1024*64,
-        'block_size': 1024*64,
-        'var_path': 'var/',
-    }
+common_cfg = {
+    'chunk_size': 1024*1024*64,
+    'block_size': 1024*64,
+    'var_path': 'var/',
+}
 
-    master_cfg = {
-        'working_user': 'wfs',
-        'working_group': 'wfs',
+master_cfg = {
+    'working_user': 'wfs',
+    'working_group': 'wfs',
+    
+    'client_port': 12180,
+    'master_port': 12181,
+    'dataserver_port': 12182,
+    
+    # configurations not in wfs_master.cfg
+    'max_listen': 100,
+}
 
-        'client_port': 12180,
-        'master_port': 12181,
-        'data_port': 12182,
-
-        # configurations not in wfs_master.cfg
-        'max_concurrency_visit': 100,
-    }
-
-    dserver_cfg = {
-        'master_host': '',
-        'master_port': 12181,
-        'master_port': 12182,
-
-        'data_path': '/mnt/wfs',
-    }
+dserver_cfg = {
+    'master_host': '',
+    'master_port': 12181,
+    'dataserver_port': 12182,
+    
+    'data_path': '/mnt/wfs',
+}
     
 
 def wfs_check_config (cfg_list, cfg_dict):
+    """Check user's config list"""
     for cfg in cfg_list:
         cfg = cfg.strip()
         if not cfg or cfg[0] == '#':

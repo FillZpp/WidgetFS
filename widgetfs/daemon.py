@@ -20,11 +20,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 import os
 import sys
 import time
-from widgetfs.config import WfsConfig, wfs_check_config
+from widgetfs.config import common_cfg, master_cfg, dserver_cfg, wfs_check_config
 from widgetfs.meta import read_meta
+from widgetfs.socket.master_connect import master_tcp_start
+#from widgetfs.socket.dserver_connect import dserver_tcp_start
 
 
 def set_master_pid(var_path):
+    """Create master pid file and write in pid"""
     pid_dir = os.path.normpath(var_path + 'mrun/')
     pid_file = os.path.normpath(var_path + 'mrun/wfs_master.pid')
 
@@ -32,16 +35,17 @@ def set_master_pid(var_path):
     try:
         os.mkdir(pid_dir)
     except FileExistsError:
-        sys.stderr.write('Error:\nWidgetFS master is already running.\n')
+        sys.stderr.write('Error:\n  master server is already running.\n')
     
     # write in current pid
     pid = str(os.getpid())
     with open(pid_file, 'w') as ff:
         ff.write(pid + '\n')
-    print('WidgetFS master starts on pid %s.' % pid)
+    print('WidgetFS master server starts on pid %s.' % pid)
 
 
 def set_dserver_pid(var_path):
+    """Create data server pid file and write in pid"""
     pid_dir = os.path.normpath(var_path + 'drun/')
     pid_file = os.path.normpath(var_path + 'drun/wfs_dserver.pid')
 
@@ -49,7 +53,7 @@ def set_dserver_pid(var_path):
     try:
         os.mkdir(pid_dir)
     except FileExistsError:
-        sys.stderr.write('Error:\nWidgetFS data server is already running.\n')
+        sys.stderr.write('Error:\n  data server is already running.\n')
     
     # write in current pid
     pid = str(os.getpid())
@@ -57,23 +61,40 @@ def set_dserver_pid(var_path):
         ff.write(pid + '\n')
     print('WidgetFS data server starts on pid %s.' % pid)
 
+
+def read_cfg (server):
+    """Read config file """
+    # read and check the configuration file
+    if server == 'master':
+        with open('etc/wfs_master.cfg', 'r') as ff:
+            cfg_list = ff.readlines()
+        wfs_check_config(cfg_list, master_cfg)
+    else:
+        with open('etc/wfs_dataserver.cfg', 'r') as ff:
+            cfg_list = ff.readlines()
+        wfs_check_config(cfg_list, dserver_cfg)
     
 
-def daemon_work(server):
-    # read and check the configuration file
-    with open('etc/wfs_master.cfg', 'r') as ff:
-        cfg_list = ff.readlines()
-    wfs_check_config(cfg_list, WfsConfig.master_cfg)
-
-    var_path = WfsConfig.common_cfg['var_path']
+def daemon_start (server):
+    """Entrance of daemon process"""
+    read_cfg(server)
+    var_path = common_cfg['var_path']
     # create pid file
     if server == 'master':
         set_master_pid(var_path)
+        # read meta data from dataserver.meta
+        root_dir = read_meta(var_path, server)
+        master_tcp_start()
     else:
         set_dserver_pid(var_path)
+        # read meta data from master.meta
+        
+        #dserver_tcp_start()
 
-    # read dserver.meta
-    root_dir = read_meta(var_path, server)
-    
-    time.sleep(100)
+
+def daemon_stop (server):
+    """Stop of daemon"""
+    read_cfg(server)
+    var_path = common_cfg['var_path']
+    return var_path
 

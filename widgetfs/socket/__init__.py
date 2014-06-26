@@ -17,19 +17,4 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 """
 
 
-import os
-import pickle
-from widgetfs.codef import WfsDir
 
-
-def read_meta(var_path, server):
-    """Read meta data from meta file"""
-    meta_file = os.path.normpath(var_path + server + '.meta')
-    try:
-        with open(meta_file, 'rb') as ff:
-            root_dir = pickle.load(ff)
-    except FileNotFoundError:
-        root_dir = WfsDir('/', '')
-        
-    return root_dir
-    
