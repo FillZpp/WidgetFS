@@ -33,14 +33,6 @@ master_port = master_cfg['master_port']
 dserver_port = master_cfg['dataserver_port']
 
 
-def handle_sigterm (a, b):
-    """Handle sigterm
-    Close tcp server and exit"""
-    tcpserver_for_client.close()
-    tcpserver_for_dserver.close()
-    print('Widget file system stops.')
-
-
 class ClientThread (threading.Thread):
     """Thread for each client connect"""
     def __init__ (self, client, addr):
@@ -103,18 +95,30 @@ class DserverListen (threading.Thread):
                         dthread.join()
         except error:
             pass
-        
+
+
+client_listen = ClientListen()
+dserver_listen = DserverListen()
+
+
+def handle_sigterm (a, b):
+    """Handle sigterm
+    Close tcp server and exit"""
+    tcpserver_for_client.close()
+    tcpserver_for_dserver.close()
+    client_listen.join()
+    dserver_listen.join()
+    print('Widget file system stops.')
+
 
 def master_tcp_start ():
     """Loop in master daemon process"""
     signal.signal(signal.SIGTERM, handle_sigterm)
 
     # start to listen client
-    client_listen = ClientListen()
     client_listen.start()
 
     # start to listen data server
-    dserver_listen = DserverListen()
     dserver_listen.start()
     
 
