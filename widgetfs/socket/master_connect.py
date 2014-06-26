@@ -95,20 +95,15 @@ class DserverListen (threading.Thread):
                         dthread.join()
         except error:
             pass
-
-
-client_listen = ClientListen()
-dserver_listen = DserverListen()
-
+        
 
 def handle_sigterm (a, b):
     """Handle sigterm
     Close tcp server and exit"""
     tcpserver_for_client.close()
     tcpserver_for_dserver.close()
-    client_listen.join()
-    dserver_listen.join()
     print('Widget file system stops.')
+    sys.exit(0)
 
 
 def master_tcp_start ():
@@ -116,9 +111,16 @@ def master_tcp_start ():
     signal.signal(signal.SIGTERM, handle_sigterm)
 
     # start to listen client
+    client_listen = ClientListen()
+    client_listen.daemon = True
     client_listen.start()
 
     # start to listen data server
+    dserver_listen = DserverListen()
+    dserver_listen.daemon = True
     dserver_listen.start()
+
+    while True:
+        time.sleep(10000)
     
 
