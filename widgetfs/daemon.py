@@ -20,10 +20,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 import os
 import sys
 import time
-from widgetfs.config import common_cfg, master_cfg, dserver_cfg, wfs_check_config
-from widgetfs.meta import read_meta
+from widgetfs.core.config import *
+from widgetfs.core.meta import read_meta
 from widgetfs.socket.master_connect import master_tcp_start
-#from widgetfs.socket.dserver_connect import dserver_tcp_start
+from widgetfs.socket.dserver_connect import dserver_tcp_start
 
 
 def set_master_pid(var_path):
@@ -69,6 +69,9 @@ def read_cfg (server):
         with open('etc/wfs_master.cfg', 'r') as ff:
             cfg_list = ff.readlines()
         wfs_check_config(cfg_list, master_cfg)
+        with open('etc/wfs_slaves.cfg', 'r') as ff:
+            cfg_list = ff.readlines()
+        wfs_check_slaves(cfg_list)
     else:
         with open('etc/wfs_dataserver.cfg', 'r') as ff:
             cfg_list = ff.readlines()
@@ -83,13 +86,13 @@ def daemon_start (server):
     if server == 'master':
         set_master_pid(var_path)
         # read meta data from dataserver.meta
-        root_dir = read_meta(var_path, server)
-        master_tcp_start()
+        root_dir = read_meta(server)
+        master_tcp_start(root_dir)
     else:
         set_dserver_pid(var_path)
         # read meta data from master.meta
         
-        #dserver_tcp_start()
+        dserver_tcp_start()
 
 
 def daemon_stop (server):

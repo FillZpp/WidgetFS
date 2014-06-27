@@ -16,6 +16,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 
+
+from widgetfs.core.rwlock import RWLock
+
     
 class WfsChunk (object):
     """Chunk in Widget file system"""
@@ -32,6 +35,7 @@ class WfsFile (object):
         self.fname = fname
         self.pdir = pdir
         self.chunk_dict = {}
+        self.rwlock = RWLock()
 
 
 class WfsDir (object):
@@ -39,6 +43,8 @@ class WfsDir (object):
     def __init__ (self, dname, pdir):
         self.dname = dname
         self.pdir = pdir
-
+        self.cdir = []
+        self.files = []
+        self.rwlock = RWLock()
 
 

@@ -22,7 +22,8 @@ import time
 import signal
 import threading
 from socket import *
-from widgetfs.config import common_cfg, master_cfg
+from widgetfs.core.config import common_cfg, master_cfg
+from widgetfs.core.meta import write_meta
 
 
 tcpserver_for_client = socket(AF_INET, SOCK_STREAM)
@@ -31,6 +32,9 @@ tcpserver_for_dserver = socket(AF_INET, SOCK_STREAM)
 client_port = master_cfg['client_port']
 master_port = master_cfg['master_port']
 dserver_port = master_cfg['dataserver_port']
+dserver_slaves = master_cfg['slaves']
+
+root_dir = ''
 
 
 class ClientThread (threading.Thread):
@@ -43,13 +47,13 @@ class ClientThread (threading.Thread):
         print('get client connect %s' % self.addr)
 
 
-class ClientListen (threading.Thread):
+class ListenClient (threading.Thread):
     """Thread for listening for connection from client"""
     def run (self):
         self.cthreads = []
         try:
             tcpserver_for_client.bind(('', client_port))
-            tcpserver_for_client.listen(master_cfg['max_listen'])
+            tcpserver_for_client.listen(common_cfg['max_listen'])
 
             while True:
                 client, addr = tcpserver_for_client.accept()
@@ -66,25 +70,28 @@ class ClientListen (threading.Thread):
 
 
 class DserverThread (threading.Thread):
-    """Thread for each dserver connect"""
+    """Thread for each dserver connection"""
     def __init__ (self, dserver, addr):
         self.dserver = dserver
         self.addr = addr
 
     def run (self):
-        print('get dserver connect %s' % self.addr)
+        print('get dserver connection %s' % self.addr)
 
 
-class DserverListen (threading.Thread):
-    """Thread for listening for connection from dserver"""
+class ListenDserver (threading.Thread):
+    """Thread for listening to connection from dserver"""
     def run (self):
         self.dthreads = []
         try:
             tcpserver_for_dserver.bind(('', master_port))
-            tcpserver_for_dserver.listen(master_cfg['max_listen'])
+            tcpserver_for_dserver.listen(common_cfg['max_listen'])
 
             while True:
                 dserver, addr = tcpserver_for_dserver.accept()
+                if not addr in dserver_slaves:
+                    dserver.close()
+                    continue
                 dthread = DserverThread(dserver, addr)
                 dthread.start()
                 dthreads.append(dthread)
@@ -102,23 +109,26 @@ def handle_sigterm (a, b):
     Close tcp server and exit"""
     tcpserver_for_client.close()
     tcpserver_for_dserver.close()
+    write_meta('master', root_dir)
+    
     print('Widget file system stops.')
     sys.exit(0)
 
 
-def master_tcp_start ():
+def master_tcp_start (rdir):
     """Loop in master daemon process"""
     signal.signal(signal.SIGTERM, handle_sigterm)
+    root_dir = rdir
 
     # start to listen client
-    client_listen = ClientListen()
-    client_listen.daemon = True
-    client_listen.start()
+    listen_client = ListenClient()
+    listen_client.daemon = True
+    listen_client.start()
 
     # start to listen data server
-    dserver_listen = DserverListen()
-    dserver_listen.daemon = True
-    dserver_listen.start()
+    listen_dserver = ListenDserver()
+    listen_dserver.daemon = True
+    listen_dserver.start()
 
     while True:
         time.sleep(10000)

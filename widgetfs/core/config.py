@@ -17,10 +17,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 """
 
 
+from socket import *
+
+
 common_cfg = {
     'chunk_size': 1024*1024*64,
     'block_size': 1024*64,
     'var_path': 'var/',
+    'max_listen': 100,
 }
 
 master_cfg = {
@@ -30,9 +34,8 @@ master_cfg = {
     'client_port': 12180,
     'master_port': 12181,
     'dataserver_port': 12182,
-    
-    # configurations not in wfs_master.cfg
-    'max_listen': 100,
+
+    'slaves': [],
 }
 
 dserver_cfg = {
@@ -54,5 +57,20 @@ def wfs_check_config (cfg_list, cfg_dict):
         mkey, mvalue = [s.strip() for s in cfg.split('=')]
         if cfg_dict.has_key(mkey):
             g_dict[mkey] = mvalue
+
+
+def wfs_check_slaves (slaves_list):
+    """Check slaves"""
+    for slave in slaves_list:
+        slave = slave.strip()
+        if not slave or slave[0] == '#':
+            continue
+
+        # check if it is a hostname
+        if not '.' in slave:
+            slave = gethostbyname(slave)
+
+        master_cfg['slaves'].append(slave)
+        
 
 
