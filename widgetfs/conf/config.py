@@ -47,7 +47,7 @@ dserver_cfg = {
 }
     
 
-def wfs_check_config (cfg_list, cfg_dict):
+def check_config (cfg_list, cfg_dict):
     """Check user's config list"""
     for cfg in cfg_list:
         cfg = cfg.strip()
@@ -59,7 +59,7 @@ def wfs_check_config (cfg_list, cfg_dict):
             g_dict[mkey] = mvalue
 
 
-def wfs_check_slaves (slaves_list):
+def check_slaves (slaves_list):
     """Check slaves"""
     for slave in slaves_list:
         slave = slave.strip()

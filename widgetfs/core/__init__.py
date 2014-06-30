@@ -17,34 +17,4 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 """
 
 
-import os
-import pickle
-from widgetfs.conf.config import common_cfg
-from widgetfs.conf.codef import WfsDir
 
-
-class WfsRoot(object):
-    root_dir = WfsDir('/', '')
-
-
-def check_meta():
-    """Read meta data from meta file"""
-    var_path = common_cfg['var_path']
-    meta_file = os.path.normpath(var_path + '/master.meta')
-    
-    try:
-        with open(meta_file, 'rb') as ff:
-            WfsRoot.root_dir = pickle.load(ff)
-    except FileNotFoundError:
-        pass
-
-
-def write_meta():
-    """Write meta data to meta file"""
-    var_path = common_cfg['var_path']
-    meta_file = os.path.normpath(var_path + '/master.meta')
-    
-    with open(meta_file, 'wb') as ff:
-        pickle.dump(WfsRoot.root_dir, ff)
-    
-    

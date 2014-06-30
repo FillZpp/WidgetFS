@@ -22,8 +22,10 @@ import time
 import signal
 import threading
 from socket import *
-from widgetfs.core.config import common_cfg, master_cfg
+from widgetfs.conf.config import common_cfg, master_cfg
 from widgetfs.core.meta import write_meta
+from widgetfs.core.log import write_master_log
+from widgetfs.socket.handle_client import handle_client_connection
 
 
 tcpserver_for_client = socket(AF_INET, SOCK_STREAM)
@@ -34,8 +36,6 @@ master_port = master_cfg['master_port']
 dserver_port = master_cfg['dataserver_port']
 dserver_slaves = master_cfg['slaves']
 
-root_dir = ''
-
 
 class ClientThread (threading.Thread):
     """Thread for each client connect"""
@@ -44,7 +44,12 @@ class ClientThread (threading.Thread):
         self.addr = addr
 
     def run (self):
-        print('get client connect %s' % self.addr)
+        data = self.client.recv(4)
+        if data is '0000':
+            write_log('Get connection with client %s.' % self.addr)
+            self.client.send('1111')
+            handle_client_connection(self.client, self.addr)
+        write_log('Not identified client %s.' % self.addr)
 
 
 class ListenClient (threading.Thread):
@@ -109,16 +114,15 @@ def handle_sigterm (a, b):
     Close tcp server and exit"""
     tcpserver_for_client.close()
     tcpserver_for_dserver.close()
-    write_meta('master', root_dir)
+    write_meta()
     
     print('Widget file system stops.')
     sys.exit(0)
 
 
-def master_tcp_start (rdir):
+def master_tcp_start ():
     """Loop in master daemon process"""
     signal.signal(signal.SIGTERM, handle_sigterm)
-    root_dir = rdir
 
     # start to listen client
     listen_client = ListenClient()

@@ -17,7 +17,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 """
 
 
-from widgetfs.core.rwlock import RWLock
+from widgetfs.conf.rwlock import RWLock
 
     
 class WfsChunk (object):
@@ -34,16 +34,17 @@ class WfsFile (object):
     def __init__ (self, fname, pdir='/'):
         self.fname = fname
         self.pdir = pdir
+        self.size = 0
         self.chunk_dict = {}
         self.rwlock = RWLock()
 
 
-class WfsDir (object):
+class WfsDir(object):
     """Directory in Widget file system"""
-    def __init__ (self, dname, pdir):
+    def __init__(self, dname, pdir):
         self.dname = dname
         self.pdir = pdir
-        self.cdir = []
+        self.cdirs = []
         self.files = []
         self.rwlock = RWLock()
 

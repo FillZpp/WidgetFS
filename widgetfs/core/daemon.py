@@ -20,10 +20,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 import os
 import sys
 import time
-from widgetfs.core.config import *
-from widgetfs.core.meta import read_meta
-from widgetfs.socket.master_connect import master_tcp_start
-from widgetfs.socket.dserver_connect import dserver_tcp_start
+from widgetfs.conf.config import *
+from widgetfs.conf.codef import WfsDir
+from widgetfs.core.meta import check_meta
+from widgetfs.socket.master_tcp_server import master_tcp_start
+from widgetfs.socket.dserver_tcp_server import dserver_tcp_start
 
 
 def set_master_pid(var_path):
@@ -62,42 +63,15 @@ def set_dserver_pid(var_path):
     print('WidgetFS data server starts on pid %s.' % pid)
 
 
-def read_cfg (server):
-    """Read config file """
-    # read and check the configuration file
-    if server == 'master':
-        with open('etc/wfs_master.cfg', 'r') as ff:
-            cfg_list = ff.readlines()
-        wfs_check_config(cfg_list, master_cfg)
-        with open('etc/wfs_slaves.cfg', 'r') as ff:
-            cfg_list = ff.readlines()
-        wfs_check_slaves(cfg_list)
-    else:
-        with open('etc/wfs_dataserver.cfg', 'r') as ff:
-            cfg_list = ff.readlines()
-        wfs_check_config(cfg_list, dserver_cfg)
-    
-
 def daemon_start (server):
     """Entrance of daemon process"""
-    read_cfg(server)
     var_path = common_cfg['var_path']
     # create pid file
     if server == 'master':
         set_master_pid(var_path)
-        # read meta data from dataserver.meta
-        root_dir = read_meta(server)
-        master_tcp_start(root_dir)
+        check_meta()
+        master_tcp_start()
     else:
         set_dserver_pid(var_path)
-        # read meta data from master.meta
-        
         dserver_tcp_start()
-
-
-def daemon_stop (server):
-    """Stop of daemon"""
-    read_cfg(server)
-    var_path = common_cfg['var_path']
-    return var_path
 

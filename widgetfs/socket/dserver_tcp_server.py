@@ -22,7 +22,7 @@ import time
 import signal
 import threading
 from socket import *
-from widgetfs.core.config import common_cfg, dserver_cfg
+from widgetfs.conf.config import common_cfg, dserver_cfg
 
 
 tcpserver_for_master = socket(AF_INET, SOCK_STREAM)
