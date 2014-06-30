@@ -51,11 +51,13 @@ def check_config (cfg_list, cfg_dict):
     """Check user's config list"""
     for cfg in cfg_list:
         cfg = cfg.strip()
-        if not cfg or cfg[0] == '#':
+        if not cfg or cfg.startswith('#'):
             continue
 
         mkey, mvalue = [s.strip() for s in cfg.split('=')]
         if cfg_dict.has_key(mkey):
+            if mkey.endswith('port'):
+                mvalue = int(mvalue)
             g_dict[mkey] = mvalue
 
 
@@ -63,14 +65,10 @@ def check_slaves (slaves_list):
     """Check slaves"""
     for slave in slaves_list:
         slave = slave.strip()
-        if not slave or slave[0] == '#':
+        if not slave or slave.startswith('#'):
             continue
 
-        # check if it is a hostname
-        if not '.' in slave:
-            slave = gethostbyname(slave)
-
+        slave = gethostbyname(slave)
         master_cfg['slaves'].append(slave)
-        
 
 

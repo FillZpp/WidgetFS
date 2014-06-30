@@ -27,6 +27,10 @@ from widgetfs.core.meta import write_meta
 from widgetfs.core.log import write_master_log
 from widgetfs.socket.handle_client import handle_client_connection
 
+if sys.version_info < (3,):
+    py_version = 2
+else:
+    py_version = 3
 
 tcpserver_for_client = socket(AF_INET, SOCK_STREAM)
 tcpserver_for_dserver = socket(AF_INET, SOCK_STREAM)
@@ -45,9 +49,14 @@ class ClientThread (threading.Thread):
 
     def run (self):
         data = self.client.recv(4)
+        print(data)
         if data is '0000':
             write_log('Get connection with client %s.' % self.addr)
-            self.client.send('1111')
+            if py_version == 3:
+                data = bytes('1111', 'utf-8')
+            else:
+                data = '1111'
+            self.client.send(data)
             handle_client_connection(self.client, self.addr)
         write_log('Not identified client %s.' % self.addr)
 
@@ -55,11 +64,12 @@ class ClientThread (threading.Thread):
 class ListenClient (threading.Thread):
     """Thread for listening for connection from client"""
     def run (self):
+        print('server in')
         self.cthreads = []
         try:
             tcpserver_for_client.bind(('', client_port))
             tcpserver_for_client.listen(common_cfg['max_listen'])
-
+            print('server ok')
             while True:
                 client, addr = tcpserver_for_client.accept()
                 cthread = ClientThread(client, addr)
@@ -70,10 +80,11 @@ class ListenClient (threading.Thread):
                     if not cthread.isAlive():
                         cthreads.remove(cthread)
                         cthread.join()
-        except error:
-            pass
+        except error as e:
+            sys.stderr.write('Error:\n  error in listen client thread.' +
+                             e.strerror)
 
-
+            
 class DserverThread (threading.Thread):
     """Thread for each dserver connection"""
     def __init__ (self, dserver, addr):

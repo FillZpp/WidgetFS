@@ -29,6 +29,7 @@ if not wfs_home_path:
                      'You should define environment variable WFS_HOME first.\n')
     sys.exit(-1)
 sys.path.append(wfs_home_path)
+os.chdir(wfs_home_path)
 from widgetfs.conf.config import common_cfg, dserver_cfg, check_config
 from widgetfs.core.daemon import daemon_start
 
@@ -94,8 +95,6 @@ def dserver_stop ():
 
 
 def main ():
-    os.chdir(wfs_home_path)
-
     if len(sys.argv) == 2:
         if sys.argv[1] == 'start':
             dserver_start()

@@ -23,12 +23,24 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 import os
 import sys
 from socket import *
+
 wfs_home_path = os.environ.get('WFS_HOME')
 if not wfs_home_path:
     sys.stderr.write('Error:\n  ' +
                      'You should define environment variable WFS_HOME first.\n')
     sys.exit(-1)
 sys.path.append(wfs_home_path)
+os.chdir(wfs_home_path)
+
+# check version of python
+if sys.version_info < (3,):
+    py_version = 2
+else:
+    py_version = 3
+
+master_host = 'localhost'
+client_port = 12180
+tcp_client = socket(AF_INET, SOCK_STREAM)
 
 
 def print_help():
@@ -47,16 +59,45 @@ def print_help():
 
 def read_cfg():
     """Read config file"""
-    #with open('etc/')
-    pass
+    with open('etc/wfs_client.cfg') as ff:
+        cfg_list = ff.readlines()
+    for i in cfg_list:
+        i = i.strip()
+        if not i or i.startswith('#'):
+            continue
+        mkey, mvalue = [s.strip() for s in i.split('=')]
+        if mkey == 'master_host':
+            master_host = mvalue
+        elif mkey == 'client_port':
+            client_port = int(mvalue)
+    master_host = gethostbyname(master_host)
+
+
+def get_connection():
+    """Get connection with master server"""
+    try:
+        tcp_client.connect((master_host, client_port))
+        if py_version == 3:
+            data = bytes('0000', 'utf-8')
+        else:
+            data = '0000'
+        tcp_client.send(data)
+        recv = tcp_client.recv(4)
+        print(recv)
+    except error as e:
+        sys.stderr.write('Error:\n')
+    finally:
+        tcp_client.close()
 
 
 def do_mkdir(pars):
-    pass
+    """Send mkdir command"""
+    get_connection()
 
 
-def do_ls():
-    pass
+def do_ls(pars):
+    """Send ls command"""
+    get_connection()
 
 
 def main():
