@@ -40,7 +40,7 @@ def write_master_log (content):
         ft = 'a'
     
     WfsLog.log_lock.acquire()
-    with open(WfsLog.master_log, 'w') as ff:
+    with open(WfsLog.master_log, ft) as ff:
         ff.write(time.ctime() + '  ' + content + '\n')
     WfsLog.log_lock.release()
 

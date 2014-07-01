@@ -23,14 +23,11 @@ import signal
 import threading
 from socket import *
 from widgetfs.conf.config import common_cfg, master_cfg
+from widgetfs.conf.codef import turn_bytes
 from widgetfs.core.meta import write_meta
 from widgetfs.core.log import write_master_log
 from widgetfs.socket.handle_client import handle_client_connection
 
-if sys.version_info < (3,):
-    py_version = 2
-else:
-    py_version = 3
 
 tcpserver_for_client = socket(AF_INET, SOCK_STREAM)
 tcpserver_for_dserver = socket(AF_INET, SOCK_STREAM)
@@ -49,16 +46,13 @@ class ClientThread (threading.Thread):
         self.addr = addr
 
     def run (self):
-        data = self.client.recv(4)
-        if data == b'0000':
+        data = self.client.recv(4).decode('utf-8')
+        if data == '0000':
             write_master_log('Get connection with client %s.' % str(self.addr))
-            if py_version == 3:
-                data = bytes('1111', 'utf-8')
-            else:
-                data = '1111'
-            self.client.send(data)
+            self.client.send(turn_bytes('1111'))
             handle_client_connection(self.client, self.addr)
-        write_master_log('Not identified client %s.' % str(self.addr))
+        else:
+            write_master_log('Not identified client %s.' % str(self.addr))
 
 
 class ListenClient (threading.Thread):
@@ -67,6 +61,7 @@ class ListenClient (threading.Thread):
         self.cthreads = []
         try:
             tcpserver_for_client.bind(('', client_port))
+
             tcpserver_for_client.listen(common_cfg['max_listen'])
             while True:
                 client, addr = tcpserver_for_client.accept()

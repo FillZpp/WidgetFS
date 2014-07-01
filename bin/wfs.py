@@ -31,12 +31,8 @@ if not wfs_home_path:
     sys.exit(-1)
 sys.path.append(wfs_home_path)
 os.chdir(wfs_home_path)
+from widgetfs.conf.codef import turn_bytes
 
-# check version of python
-if sys.version_info < (3,):
-    py_version = 2
-else:
-    py_version = 3
 
 master_host = 'localhost'
 client_port = 12180
@@ -77,16 +73,10 @@ def get_connection():
     """Get connection with master server"""
     try:
         tcp_client.connect((master_host, client_port))
-        if py_version == 3:
-            data = bytes('0000', 'utf-8')
-        else:
-            data = '0000'
-        tcp_client.send(data)
+        tcp_client.send(turn_bytes('0000'))
         recv = tcp_client.recv(4)
-        print(recv)
     except error as e:
         sys.stderr.write('Error:\n')
-    finally:
         tcp_client.close()
 
 
@@ -98,6 +88,21 @@ def do_mkdir(pars):
 def do_ls(pars):
     """Send ls command"""
     get_connection()
+
+    try:
+        tcp_client.send(turn_bytes('1000'))
+
+        if len(pars) == 0:
+            tcp_client.send(turn_bytes('/'))
+        else:
+            tcp_client.send(turn_bytes(pars[0]))
+        
+        recv = tcp_client.recv(1024)
+        print(recv.decode('utf-8'))
+    except error as e:
+        sys.stderr.write('Error:\n' + e.strerror + '\n')
+    finally:
+        tcp_client.close()
 
 
 def main():

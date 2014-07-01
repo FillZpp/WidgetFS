@@ -17,7 +17,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 """
 
 
+import os
+import sys
 from socket import *
+from widgetfs.conf.codef import turn_bytes
 from widgetfs.core.meta import WfsRoot
 from widgetfs.core.log import write_master_log
 
@@ -25,8 +28,7 @@ from widgetfs.core.log import write_master_log
 def handle_client_connection (client, addr):
     """Deal with client commands"""
     while True:
-        ctrl_data = client.recv(4)
-
+        ctrl_data = client.recv(4).decode('utf-8')
         if ctrl_data == '1000':
             do_ls(client, addr)
         elif ctrl_data == '1001':
@@ -52,20 +54,22 @@ def handle_client_connection (client, addr):
 def split_path (tar_path):
     """Part the path into list"""
     path_list = []
+    tar_dir = tar_path
     while True:
-        if tar_dir == '/' or tar_dir == '':
-            break
         tar_dir, cdir = os.path.split(tar_dir)
-        path_list.insert(0, cdir)
+        if tar_dir == '/':
+            path_list.append(tar_dir)
+            break
+        path_list.append(cdir)
     return path_list
 
 
 def check_path (path_list):
     """Check if path is correct"""
     if path_list[0] != '/':
-        return False
+        return None, None
     elif len(path_list) == 1:
-        return WfsRoot.root_dir
+        return 'dir', WfsRoot.root_dir
         
     ndir = WfsRoot.root_dir
     n = 1
@@ -95,24 +99,24 @@ def check_path (path_list):
 
 def do_ls (client, addr):
     """Command: ls"""
-    tar_path = client.recv(1024)
-    path_list = split_path(tar_path)
+    tar_path = client.recv(1024).decode('utf-8')
+    path_list = split_path(tar_path.strip())
     t, con = check_path(path_list)
 
     if t == 'file':
         write_master_log('client %s: ls %s. Done.' %
                          (addr, tar_path))
-        client.send('File: %s\nSize: %s' %
-                    (con.fname, con.size))
+        client.send(turn_bytes('File: %s\nSize: %s' %
+                    (con.fname, con.size)))
     elif t == 'dir':
         write_master_log('client %s: ls %s. Done.' %
                          (addr, tar_path))
-        client.send('%s' %
-                    (''.join(con.cdirs) + ''.join(con.cfiles)))
+        client.send(turn_bytes('ls: %s\n%s' %
+                    (tar_path), ''.join(con.cdirs) + ''.join(con.files)))
     else:
         write_master_log('client %s: ls %s. No such file or direcotry.' %
                          (addr, tar_path))
-        client.send('ls: %s: No such file or directory' % tar_path)
+        client.send(turn_bytes('ls: %s: No such file or directory' % tar_path))
         
 
 def do_mkdir (client, addr):

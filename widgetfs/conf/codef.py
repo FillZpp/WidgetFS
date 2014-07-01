@@ -17,6 +17,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 """
 
 
+import sys
 from widgetfs.conf.rwlock import RWLock
 
     
@@ -60,4 +61,10 @@ class WfsDir(object):
     def lock_del(self):
         self.rwlock = None
 
+
+def turn_bytes(s):
+    if sys.version_info >= (3,):
+        return bytes(s, 'utf-8')
+    return s
+        
 
