@@ -31,12 +31,18 @@ class WfsChunk (object):
 
 class WfsFile (object):
     """File in Widget file system"""
-    def __init__ (self, fname, pdir='/'):
+    def __init__ (self, fname, pdir):
         self.fname = fname
         self.pdir = pdir
         self.size = 0
         self.chunk_dict = {}
-        self.rwlock = RWLock()
+        self.rwlock = None
+
+    def lock_init(self):
+        self.rwlock = RWLock
+
+    def lock_del(self):
+        self.rwlock = None
 
 
 class WfsDir(object):
@@ -46,6 +52,12 @@ class WfsDir(object):
         self.pdir = pdir
         self.cdirs = []
         self.files = []
-        self.rwlock = RWLock()
+        self.rwlock = None
+
+    def lock_init(self):
+        self.rwlock = None
+
+    def lock_del(self):
+        self.rwlock = None
 
 

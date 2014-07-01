@@ -44,50 +44,49 @@ dserver_slaves = master_cfg['slaves']
 class ClientThread (threading.Thread):
     """Thread for each client connect"""
     def __init__ (self, client, addr):
+        threading.Thread.__init__(self)
         self.client = client
         self.addr = addr
 
     def run (self):
         data = self.client.recv(4)
-        print(data)
-        if data is '0000':
-            write_log('Get connection with client %s.' % self.addr)
+        if data == b'0000':
+            write_master_log('Get connection with client %s.' % str(self.addr))
             if py_version == 3:
                 data = bytes('1111', 'utf-8')
             else:
                 data = '1111'
             self.client.send(data)
             handle_client_connection(self.client, self.addr)
-        write_log('Not identified client %s.' % self.addr)
+        write_master_log('Not identified client %s.' % str(self.addr))
 
 
 class ListenClient (threading.Thread):
     """Thread for listening for connection from client"""
     def run (self):
-        print('server in')
         self.cthreads = []
         try:
             tcpserver_for_client.bind(('', client_port))
             tcpserver_for_client.listen(common_cfg['max_listen'])
-            print('server ok')
             while True:
                 client, addr = tcpserver_for_client.accept()
                 cthread = ClientThread(client, addr)
                 cthread.start()
-                cthreads.append(cthread)
+                self.cthreads.append(cthread)
 
-                for cthread in cthreads:
+                for cthread in self.cthreads:
                     if not cthread.isAlive():
-                        cthreads.remove(cthread)
+                        self.cthreads.remove(cthread)
                         cthread.join()
         except error as e:
-            sys.stderr.write('Error:\n  error in listen client thread.' +
-                             e.strerror)
+            sys.stderr.write('Error:\n  error in listen client thread.\n' +
+                             e.errno + '  ' + e.strerror)
 
             
 class DserverThread (threading.Thread):
     """Thread for each dserver connection"""
     def __init__ (self, dserver, addr):
+        threading.Thread.__init__(self)
         self.dserver = dserver
         self.addr = addr
 
@@ -116,8 +115,9 @@ class ListenDserver (threading.Thread):
                     if not dthread.isAlive():
                         dthreads.remove(dthread)
                         dthread.join()
-        except error:
-            pass
+        except error as e:
+            sys.stderr.write('Error:\n  error in listen client thread.\n' +
+                             e.errno + '  ' + e.strerror)
         
 
 def handle_sigterm (a, b):

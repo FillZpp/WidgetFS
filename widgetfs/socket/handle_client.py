@@ -46,7 +46,7 @@ def handle_client_connection (client, addr):
         else:
             break
             
-    write_log('Disconnect with client %s.' % addr)
+    write_master_log('Disconnect with client %s.' % str(addr))
 
 
 def split_path (tar_path):
