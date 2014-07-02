@@ -23,8 +23,9 @@ from widgetfs.conf.config import common_cfg
 from widgetfs.conf.codef import *
 
 
-class WfsRoot(object):
+class WfsMeta(object):
     root_dir = WfsDir('/', '')
+    chunk_list = []
 
 
 def init_all_locks(ndir):
@@ -46,23 +47,34 @@ def del_all_locks(ndir):
 def check_meta():
     """Read meta data from meta file"""
     var_path = common_cfg['var_path']
-    meta_file = os.path.normpath(var_path + '/master.meta')
+    fs_meta_file = os.path.normpath(var_path + '/fs.meta')
+    chuck_meta_file = os.path.normpath(var_path + '/chunk.meta')
+    
     try:
-        with open(meta_file, 'rb') as ff:
-            WfsRoot.root_dir = pickle.load(ff)
+        with open(fs_meta_file, 'rb') as ff:
+            WfsMeta.root_dir = pickle.load(ff)
     except FileNotFoundError:
         pass
         
-    init_all_locks(WfsRoot.root_dir)
+    try:
+        with open(chuck_meta_file, 'rb') as ff:
+            WfsMeta.chunk_list = pickle.load(ff)
+    except FileNotFoundError:
+        pass
+        
+    init_all_locks(WfsMeta.root_dir)
 
 
 def write_meta():
     """Write meta data to meta file"""
     var_path = common_cfg['var_path']
-    meta_file = os.path.normpath(var_path + '/master.meta')
+    fs_meta_file = os.path.normpath(var_path + '/fs.meta')
+    chunk_meta_file = os.path.normpath(var_path + '/chunk.meta')
 
-    del_all_locks(WfsRoot.root_dir)
-    with open(meta_file, 'wb') as ff:
-        pickle.dump(WfsRoot.root_dir, ff)
+    del_all_locks(WfsMeta.root_dir)
+    with open(fs_meta_file, 'wb') as ff:
+        pickle.dump(WfsMeta.root_dir, ff)
+    with open(chunk_meta_file, 'wb') as ff:
+        pickle.dump(WfsMeta.chunk_list, ff)
     
     

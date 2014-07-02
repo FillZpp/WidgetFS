@@ -77,7 +77,7 @@ def dserver_stop ():
     """Stop data server daemon process
     Remove pid file and send sigterm to data server daemon process"""
     read_cfg()
-    var_path = dserver_cfg['var_path']
+    var_path = common_cfg['var_path']
     pid_dir = os.path.normpath(var_path + 'drun/')
     pid_file = os.path.normpath(var_path + 'drun/wfs_dserver.pid')
     

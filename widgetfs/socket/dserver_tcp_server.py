@@ -23,12 +23,13 @@ import signal
 import threading
 from socket import *
 from widgetfs.conf.config import common_cfg, dserver_cfg
+from widgetfs.conf.codef import turn_bytes
+from widgetfs.core.log import write_dserver_log
 
 
 tcpserver_for_master = socket(AF_INET, SOCK_STREAM)
 
 master_host = dserver_cfg['master_host']
-master_port = dserver_cfg['master_port']
 dserver_port = dserver_cfg['dataserver_port']
 
 
@@ -47,7 +48,7 @@ class ListenMaster (threading.Thread):
     def run (self):
         self.mthreads = []
         try:
-            tcpserver_for_master.bind((master_host, master_port))
+            tcpserver_for_master.bind(('', dserver_port))
             tcpserver_for_master.listen(common_cfg['max_listen'])
 
             while True:
@@ -61,7 +62,8 @@ class ListenMaster (threading.Thread):
                         mthreads.remove(mthread)
                         mthread.join()
         except error:
-            pass
+            sys.stderr.write('Error:\n  error in listen master thread.\n' +
+                             e.errno + '  ' + e.strerror)
                 
 
 def handle_sigterm (a, b):

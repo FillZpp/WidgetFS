@@ -28,20 +28,15 @@ common_cfg = {
 }
 
 master_cfg = {
-    'working_user': 'wfs',
-    'working_group': 'wfs',
-    
-    'client_port': 12180,
-    'master_port': 12181,
-    'dataserver_port': 12182,
+    'master_port': 12180,
+    'dataserver_port': 12181,
 
     'slaves': [],
 }
 
 dserver_cfg = {
     'master_host': '',
-    'master_port': 12181,
-    'dataserver_port': 12182,
+    'dataserver_port': 12181,
     
     'data_path': '/mnt/wfs',
 }

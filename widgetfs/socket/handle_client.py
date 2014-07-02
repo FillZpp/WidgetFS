@@ -21,7 +21,7 @@ import os
 import sys
 from socket import *
 from widgetfs.conf.codef import *
-from widgetfs.core.meta import WfsRoot
+from widgetfs.core.meta import WfsMeta
 from widgetfs.core.log import write_master_log
 
 
@@ -69,9 +69,9 @@ def check_path (path_list):
     if path_list[0] != '/':
         return None, None
     elif len(path_list) == 1:
-        return 'dir', WfsRoot.root_dir
+        return 'dir', WfsMeta.root_dir
         
-    ndir = WfsRoot.root_dir
+    ndir = WfsMeta.root_dir
     n = 1
     while True:
         t = False
@@ -148,7 +148,7 @@ def do_mkdir (client, addr):
     else:
         write_master_log('client %s: mkdir %s. Wrong request.' %
                          (addr, tar_path))
-        client.send(turn_bytes('mkdir: %s\nWrong request', tar_path))
+        client.send(turn_bytes('mkdir: %s\nWrong request' % tar_path))
 
 
 def do_rmdir (client, addr):

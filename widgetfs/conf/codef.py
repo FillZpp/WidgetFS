@@ -23,11 +23,10 @@ from widgetfs.conf.rwlock import RWLock
     
 class WfsChunk (object):
     """Chunk in Widget file system"""
-    def __init__ (self, num, version, ds_list):
+    def __init__ (self, num, version):
         self.num = num
         self.version = version
-        self.dserver_list = ds_list
-        self.chunk_path = ''
+        self.dserver_list = []
 
 
 class WfsFile (object):

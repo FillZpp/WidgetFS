@@ -24,19 +24,16 @@ import os
 import sys
 from socket import *
 
-wfs_home_path = os.environ.get('WFS_HOME')
-if not wfs_home_path:
-    sys.stderr.write('Error:\n  ' +
-                     'You should define environment variable WFS_HOME first.\n')
-    sys.exit(-1)
-sys.path.append(wfs_home_path)
-os.chdir(wfs_home_path)
-from widgetfs.conf.codef import turn_bytes
-
 
 master_host = 'localhost'
-client_port = 12180
+master_port = 12180
 tcp_client = socket(AF_INET, SOCK_STREAM)
+
+
+def turn_bytes(s):
+    if sys.version_info >= (3,):
+        return bytes(s, 'utf-8')
+    return s
 
 
 def print_help():
@@ -53,26 +50,10 @@ def print_help():
           '  rm          [file | directory]')
 
 
-def read_cfg():
-    """Read config file"""
-    with open('etc/wfs_client.cfg') as ff:
-        cfg_list = ff.readlines()
-    for i in cfg_list:
-        i = i.strip()
-        if not i or i.startswith('#'):
-            continue
-        mkey, mvalue = [s.strip() for s in i.split('=')]
-        if mkey == 'master_host':
-            master_host = mvalue
-        elif mkey == 'client_port':
-            client_port = int(mvalue)
-    master_host = gethostbyname(master_host)
-
-
 def get_connection():
     """Get connection with master server"""
     try:
-        tcp_client.connect((master_host, client_port))
+        tcp_client.connect((master_host, master_port))
         tcp_client.send(turn_bytes('0000'))
         recv = tcp_client.recv(4).decode('utf-8')
     except error as e:
@@ -141,6 +122,9 @@ def do_ls(pars):
 def main():
     if len(sys.argv) == 1:
         print_help()
+
+    elif sys.argv[1] == 'ls':
+        do_ls(sys.argv[2:])
         
     elif sys.argv[1] == 'mkdir':
         do_mkdir(sys.argv[2:])
@@ -154,13 +138,10 @@ def main():
     elif sys.argv[1] == 'cat':
         do_cat(sys.argv[2:])
 
-    elif sys.argv[1] == 'ls':
-        do_ls(sys.argv[2:])
-
-    elif sys.argv[1] == 'cp':
+    elif sys.argv[1] == 'put':
         do_cp(sys.argv[2:])
 
-    elif sys.argv[1] == 'mv':
+    elif sys.argv[1] == 'get':
         do_mv(sys.argv[2:])
 
     elif sys.argv[1] == 'rm':
