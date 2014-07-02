@@ -40,7 +40,7 @@ class WfsFile (object):
         self.rwlock = None
 
     def lock_init(self):
-        self.rwlock = RWLock
+        self.rwlock = RWLock()
 
     def lock_del(self):
         self.rwlock = None
@@ -56,7 +56,7 @@ class WfsDir(object):
         self.rwlock = None
 
     def lock_init(self):
-        self.rwlock = None
+        self.rwlock = RWLock()
 
     def lock_del(self):
         self.rwlock = None

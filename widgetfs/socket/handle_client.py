@@ -20,7 +20,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 import os
 import sys
 from socket import *
-from widgetfs.conf.codef import turn_bytes
+from widgetfs.conf.codef import *
 from widgetfs.core.meta import WfsRoot
 from widgetfs.core.log import write_master_log
 
@@ -57,10 +57,10 @@ def split_path (tar_path):
     tar_dir = tar_path
     while True:
         tar_dir, cdir = os.path.split(tar_dir)
-        if tar_dir == '/':
-            path_list.append(tar_dir)
+        if cdir == '':
+            path_list.insert(0, tar_dir)
             break
-        path_list.append(cdir)
+        path_list.insert(0, cdir)
     return path_list
 
 
@@ -79,21 +79,22 @@ def check_path (path_list):
         for idir in ndir.cdirs:
             if path_list[n] == idir.dname:
                 t = True
+                ndir.rwlock.read_unlock()
                 ndir = idir
                 break
-        ndir.rwlock.read_unlock()
         if t:
             if n == len(path_list)-1:
                 return 'dir', ndir
         else:
+            ndir.rwlock.read_unlock()
             if n == len(path_list)-1:
-                ndir.read_lock()
-                for ifile in ndir.cfiles:
+                ndir.rwlock.read_lock()
+                for ifile in ndir.files:
                     if path_list[n] == ifile.fname:
                         ndir.read_unlock()
                         return 'file', ifile
-                ndir.read_unlock()
-            return n, ndir
+                ndir.rwlock.read_unlock()
+                return n, ndir
         n += 1
 
 
@@ -112,70 +113,79 @@ def do_ls (client, addr):
         write_master_log('client %s: ls %s. Done.' %
                          (addr, tar_path))
         client.send(turn_bytes('ls: %s\n%s' %
-                    (tar_path), ''.join(con.cdirs) + ''.join(con.files)))
+                               (tar_path,
+                                '  '.join([idir.dname for idir in con.cdirs]) +
+                                '  ' +
+                                '  '.join([ifile.fname for ifile in con.files]))))
     else:
         write_master_log('client %s: ls %s. No such file or direcotry.' %
                          (addr, tar_path))
-        client.send(turn_bytes('ls: %s: No such file or directory' % tar_path))
+        client.send(turn_bytes('ls: %s\nNo such file or directory' % tar_path))
         
 
 def do_mkdir (client, addr):
     """Command: mkdir"""
-    tar_path = client.recv(1024)
+    tar_path = client.recv(1024).decode('utf-8')
     path_list = split_path(tar_path)
     t, con = check_path(path_list)
 
     if t == 'file' or t == 'dir':
         write_master_log('client %s: mkdir %s. File exists.' %
                          (addr, tar_path))
-        client.send('mkdir: %s: File exists' % tar_path)
+        client.send(turn_bytes('mkdir: %s\nFile exists' % tar_path))
     elif str(t).isdigit():
         while t != len(path_list):
             cdir = WfsDir(path_list[t], con)
+            cdir.lock_init()
             con.rwlock.write_lock()
             con.cdirs.append(cdir)
+            con.rwlock.write_unlock()
             con = cdir
             t += 1
         write_master_log('client %s: mkdir %s. Done.' %
                          (addr, tar_path))
-        client.send('mkdir: %s' % tar_path)
+        client.send(turn_bytes('mkdir: %s' % tar_path))
+    else:
+        write_master_log('client %s: mkdir %s. Wrong request.' %
+                         (addr, tar_path))
+        client.send(turn_bytes('mkdir: %s\nWrong request', tar_path))
 
 
 def do_rmdir (client, addr):
     """Command: rmdir"""
-    tar_path = client.recv(1024)
+    tar_path = client.recv(1024).decode('utf-8')
     path_list = split_path(tar_path)
     t, con = check_path(path_list)
 
     if t == 'dir':
-        con.read_lock()
-        if not (con.cdirs or con.cfiles):
+        con.rwlock.read_lock()
+        if not (con.cdirs or con.files):
             pdir = con.pdir
-            con.read_unlock()
-            pdir.write_lock()
+            con.rwlock.read_unlock()
+            pdir.rwlock.write_lock()
             pdir.cdirs.remove(con)
-            pdir.write_unlock()
-            write_master_log('client %s: rmdir %s. Done.' %
+            pdir.rwlock.write_unlock()
+            write_master_log('client %s: rmdir %s: Done.' %
                              (addr, tar_path))
-            client.send('rmdir: %s' % tar_path)
+            client.send(turn_bytes('rmdir: %s' % tar_path))
         else:
-            con.read_unlock()
-            write_master_log('client %s: rmdir %s. Directory not empty.' %
+            con.rwlock.read_unlock()
+            write_master_log('client %s: rmdir %s: Directory not empty.' %
                              (addr, tar_path))
-            client.send('rmdir: %s: Directory not empty' % tar_path)
+            client.send(turn_bytes('rmdir: %s\nDirectory not empty' % tar_path))
     elif t == 'file':
-        write_master_log('client %s: rmdir %s. Not a directory.' %
+        write_master_log('client %s: rmdir %s: Not a directory.' %
                          (addr, tar_path))
-        client.send('rmdir: %s: Not a directory' % tar_path)
+        client.send(turn_bytes('rmdir: %s\nNot a directory' % tar_path))
     else:
-        write_master_log('client %s: rmdir %s. No such file or directory.' %
+        write_master_log('client %s: rmdir %s: No such file or directory.' %
                          (addr, tar_path))
-        client.send('rmdir: %s: No such file or directory' % tar_path)
+        client.send(turn_bytes('rmdir: %s\nNo such file or directory' % tar_path))
 
 
 def do_mknod (client, addr):
     """Command: mknod"""
-    tar_path = client.recv(1024)
+    tar_path = client.recv(1024).decode('utf-8')
     path_list = split_path(tar_path)
     
     

@@ -41,9 +41,10 @@ class RWLock (object):
 
     def read_unlock (self):
         self.r_lock.acquire()
+        self.read_count -= 1
         if self.read_count == 0:
             self.nr_lock.release()
-        self.r_lock.acquire()
+        self.r_lock.release()
 
     def write_lock (self):
         self.rw_lock.acquire()

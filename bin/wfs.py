@@ -74,7 +74,7 @@ def get_connection():
     try:
         tcp_client.connect((master_host, client_port))
         tcp_client.send(turn_bytes('0000'))
-        recv = tcp_client.recv(4)
+        recv = tcp_client.recv(4).decode('utf-8')
     except error as e:
         sys.stderr.write('Error:\n')
         tcp_client.close()
@@ -82,7 +82,40 @@ def get_connection():
 
 def do_mkdir(pars):
     """Send mkdir command"""
-    get_connection()
+    if len(pars) == 0:
+        print_help()
+        return
+        
+    for par in pars:
+        get_connection()
+        try:
+            tcp_client.send(turn_bytes('1001'))
+            tcp_client.send(turn_bytes(par))
+            recv = tcp_client.recv(1024).decode('utf-8')
+            print(recv)
+        except error as e:
+            sys.stderr.write('Error:\n' + e.strerror + '\n')
+        finally:
+            tcp_client.close()
+
+
+def do_rmdir(pars):
+    """Send rmdir command"""
+    if len(pars) == 0:
+        print_help()
+        return
+
+    for par in pars:
+        get_connection()
+        try:
+            tcp_client.send(turn_bytes('1100'))
+            tcp_client.send(turn_bytes(par))
+            recv = tcp_client.recv(1024).decode('utf-8')
+            print(recv)
+        except error as e:
+            sys.stderr.write('Error:\n' + e.strerror + '\n')
+        finally:
+            tcp_client.close()
 
 
 def do_ls(pars):
@@ -97,8 +130,8 @@ def do_ls(pars):
         else:
             tcp_client.send(turn_bytes(pars[0]))
         
-        recv = tcp_client.recv(1024)
-        print(recv.decode('utf-8'))
+        recv = tcp_client.recv(1024).decode('utf-8')
+        print(recv)
     except error as e:
         sys.stderr.write('Error:\n' + e.strerror + '\n')
     finally:

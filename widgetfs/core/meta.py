@@ -30,7 +30,7 @@ class WfsRoot(object):
 def init_all_locks(ndir):
     ndir.lock_init()
     for idir in ndir.cdirs:
-        init_all_lock(idir)
+        init_all_locks(idir)
     for ifile in ndir.files:
         ifile.lock_init()
 
@@ -38,7 +38,7 @@ def init_all_locks(ndir):
 def del_all_locks(ndir):
     ndir.lock_del()
     for idir in ndir.cdirs:
-        del_all_lock(idir)
+        del_all_locks(idir)
     for ifile in ndir.files:
         ifile.lock_del()
 
