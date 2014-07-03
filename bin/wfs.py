@@ -197,6 +197,65 @@ def do_put(pars):
     tcp_client.close()
     print('Put %s to Widget file system %s' % (pars[0], pars[1]))
 
+
+def do_get(pars):
+    """Gett a file from Widget file system"""
+    if len(pars) != 2:
+        print_help()
+        return
+
+    tcp_client = get_connection()
+    try:
+        tcp_client.send(turn_bytes('0010'))
+        tcp_client.recv(4).decode('utf-8')
+        tcp_client.send(turn_bytes(pars[0]))
+    except error as e:
+        sys.stderr.write('Error:\n' + e.strerror + '\n')
+
+    recv = tcp_client.recv(4).decode('utf-8')
+    if recv != '1111':
+        print('Get error')
+        return
+
+    tcp_client.send(turn_bytes('1111'))
+    num = int(tcp_client.recv(4).decode('utf-8'))
+    tcp_client.send(turn_bytes('1111'))
+    size = int(tcp_client.recv(1024).decode('utf-8'))
+    tcp_client.send(turn_bytes('1111'))
+    segs = []
+    for i in range(0, num):
+        seg = tcp_client.recv(size).decode('utf-8')
+        segs.append(seg)
+    
+    content = ''.join(segs)
+    content = content[:size]
+    
+    with open(pars[1], 'w') as ff:
+        ff.write(content)
+        
+    tcp_client.close()
+    print('Get %s from Widget file system' % pars[0])
+    
+
+def do_rm(pars):
+    """Send rmdir command"""
+    if len(pars) == 0:
+        print_help()
+        return
+
+    for par in pars:
+        tcp_client = get_connection()
+        try:
+            tcp_client.send(turn_bytes('0100'))
+            tcp_client.send(turn_bytes(par))
+            recv = tcp_client.recv(1024).decode('utf-8')
+            print(recv)
+        except error as e:
+            sys.stderr.write('Error:\n' + e.strerror + '\n')
+        finally:
+            tcp_client.close()
+    
+
 def main():
     if len(sys.argv) == 1:
         print_help()

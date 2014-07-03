@@ -35,8 +35,10 @@ def handle_master_connection(master):
         master.send(turn_bytes('1111'))
     elif ctrl_data == '0001':
         do_create_chunk(master)
-    elif ctrl_data == '0010':
+    elif ctrl_data == '0011':
         do_write_chunk(master)
+    elif ctrl_data == '0010':
+        do_read_chunk(master)
 
     write_dserver_log('Disconnect with master')
 
@@ -75,7 +77,7 @@ def do_write_chunk(master):
     for i in range(0, num):
         while True:
             crc = master.recv(32).decode('utf-8')
-            seg = master.recv(common_cfg['dataserver_port'])
+            seg = master.recv(common_cfg['block_size']).decode('utf-8')
             cal = calculate_crc(seg)
             if crc == cal:
                 segs.append(seg)
@@ -89,4 +91,25 @@ def do_write_chunk(master):
     write_dserver_log('master: write into %s chunk: %s' % (chid, str(index_list)))
 
 
+def do_read_chunk(master):
+    """Get content and read from chunk"""
+    master.send(turn_bytes('1111'))
+    chid = master.recv(8).decode('utf-8')
+    num = int(master.recv(4).decode('utf-8'))
+    master.send(turn_bytes('1111'))
+
+    index_list = []
+    for i in range(0, num):
+        data = int(master.recv(4).decode('utf-8'))
+        index_list.append(data)
+        master.send(turn_bytes('1111'))
+
+    master.recv(4).decode('utf-8')
+    segs, crcs = read_from_chunk_file(chid, index_list)
+    for i in range(0, num):
+        master.send(turn_bytes(segs[i]))
+        recv = master.recv(4).decode('utf-8')
+        
+
+    
 

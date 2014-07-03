@@ -43,6 +43,7 @@ class WfsFile (object):
         self.fname = fname
         self.pdir = pdir
         self.size = 0
+        self.chunk_seq = {}
         self.chunk_dict = {}
         self.rwlock = None
 

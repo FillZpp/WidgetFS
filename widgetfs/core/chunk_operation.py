@@ -19,6 +19,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 import os
 from widgetfs.conf.config import common_cfg, dserver_cfg
+from widgetfs.core.chunk_ctrl import calculate_crc
 
 
 def write_into_chunk_file(chid, index_list, segs, crcs):
@@ -45,11 +46,43 @@ def write_into_chunk_file(chid, index_list, segs, crcs):
         crc_start = block_size*10 + 32*i
         block_start = block_size*(20 + i)
         content = content[:crc_start] + crcs[count] + \
-                  content[crc_start+len(crc[count]):block_start] + segs[count] +\
+                  content[crc_start+len(crcs[count]):block_start] + segs[count] +\
                   content[block_start+len(segs[count]):]
         count += 1
 
     with open(chunk_path, 'w') as ff:
         ff.write(content)
 
+
+def read_from_chunk_file(chid, index_list):
+    block_size = common_cfg['block_size']
+    data_path = dserver_cfg['data_path']
+    chunk_file = ''
+    try:
+        file_list = os.listdir(data_path)
+        for cfile in file_list:
+            spl = cfile.split('_')
+            if len(spl) > 2 and spl[1] == chid:
+                chunk_file = cfile
+                break
+    except FileNotFoundError as e:
+        print('Error:\nCan not find data path')
+
+    chunk_path = os.path.normpath(data_path + '/' + chunk_file)
+    with open(chunk_path, 'r') as ff:
+        conl = ff.readlines()
+    
+    content = ''.join(conl)
+    count = 0
+    segs = []
+    crcs = []
+    for i in index_list:
+        crc_start = block_size*10 + 32*i
+        block_start = block_size*(20 + i)
+        data = content[block_start:block_start+block_size]
+        segs.append(data)
+        crcs.append(calculate_crc(data))
+        count += 1
+
+    return segs, crcs
     

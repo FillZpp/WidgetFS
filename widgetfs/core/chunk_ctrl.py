@@ -22,7 +22,7 @@ import random
 import threading
 from socket import *
 from binascii import crc32
-from widgetfs.conf.config import master_cfg
+from widgetfs.conf.config import master_cfg, common_cfg
 from widgetfs.conf.codef import WfsChunk, turn_bytes
 from widgetfs.core.meta import WfsMeta
 
@@ -110,7 +110,7 @@ class PushToChunk(threading.Thread):
             tcp_dserver.connect((slave, master_cfg['dataserver_port']))
             tcp_dserver.send(turn_bytes('0000'))
             recv = tcp_dserver.recv(4).decode('utf-8')
-            tcp_dserver.send(turn_bytes('0010'))
+            tcp_dserver.send(turn_bytes('0011'))
             recv = tcp_dserver.recv(4).decode('utf-8')
 
             blocks_num = len(self.blocks_tuple)
@@ -187,5 +187,68 @@ class PushToChunk(threading.Thread):
             tcp_dserver.close()
             if num == push_num:
                 break
+
+
+class PullFromChunk(object):
+    """Pull content from chunks"""
+    def __init__(self, pos_chunks, chunk_seq):
+        self.pos_chunks = pos_chunks
+        self.chunk_seq = chunk_seq
+
+    def get_content(self):
+        block_size = common_cfg['block_size']
+        all_segs = [[] for i in self.chunk_seq]
+        for pos_chunk in self.pos_chunks:
+            segs = ['' for i in self.chunk_seq]
+            num = len(pos_chunk) - 1
+            slave = self.check_chunk(pos_chunk[0])
+            if not slave:
+                return None
+                
+            tcp_dserver = socket(AF_INET, SOCK_STREAM)
+            tcp_dserver.connect((slave, master_cfg['dataserver_port']))
+            tcp_dserver.send(turn_bytes('0000'))
+            recv = tcp_dserver.recv(4).decode('utf-8')
+            tcp_dserver.send(turn_bytes('0010'))
+            recv = tcp_dserver.recv(4).decode('utf-8')
+
+            tcp_dserver.send(turn_bytes(pos_chunk[0].chid))
+            tcp_dserver.send(turn_bytes(str(num)))
+            recv = tcp_dserver.recv(4).decode('utf-8')
+
+            for i in range(0, num):
+                tcp_dserver.send(turn_bytes(str(pos_chunk[i+1])))
+                recv = tcp_dserver.recv(4).decode('utf-8')
+
+            tcp_dserver.send(turn_bytes('1111'))
+            for i in range(0, num):
+                data = tcp_dserver.recv(block_size).decode('utf-8')
+                segs.append(data)
+                tcp_dserver.send(turn_bytes('1111'))
+
+            for k, v in self.chunk_seq.items():
+                if v == pos_chunk[0].chid:
+                    all_segs[k-1] = segs
+
+        return all_segs
+            
+
+
+    def check_chunk(self, chunk):
+        tcp_dserver = socket(AF_INET, SOCK_STREAM)
+        for slave in chunk.dserver_list:
+            tcp_dserver.connect((slave, master_cfg['dataserver_port']))
+            tcp_dserver.send(turn_bytes('0000'))
+            recv = tcp_dserver.recv(4).decode('utf-8')
+            if recv != '1111':
+                continue
+            tcp_dserver.send(turn_bytes('0000'))
+            recv = tcp_dserver.recv(4).decode('utf-8')
+            tcp_dserver.close()
+            if recv == '1111':
+                return slave
+        return None
+
+        
                 
     
