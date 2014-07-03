@@ -20,9 +20,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 import os
 import sys
 from socket import *
+from widgetfs.conf.config import common_cfg
 from widgetfs.conf.codef import *
 from widgetfs.core.meta import WfsMeta
 from widgetfs.core.log import write_master_log
+from widgetfs.core.chunk_ctrl import *
 
 
 def handle_client_connection (client, addr):
@@ -91,10 +93,10 @@ def check_path (path_list):
                 ndir.rwlock.read_lock()
                 for ifile in ndir.files:
                     if path_list[n] == ifile.fname:
-                        ndir.read_unlock()
+                        ndir.rwlock.read_unlock()
                         return 'file', ifile
-                ndir.rwlock.read_unlock()
-                return n, ndir
+            ndir.rwlock.read_unlock()
+            return n, ndir
         n += 1
 
 
@@ -187,6 +189,59 @@ def do_mknod (client, addr):
     """Command: mknod"""
     tar_path = client.recv(1024).decode('utf-8')
     path_list = split_path(tar_path)
+    t, con = check_path(path_list)
+
+    if not t:
+        write_master_log('client %s: mknod %s: No such file or directory' %
+                         (addr, tar_path))
+        client.send(turn_bytes('mknod: %s\nNo such file or directory' % tar_path))
+    elif t == 'dir' or t == 'file':
+        write_master_log('client %s: mknod %s: File exists' % (addr, tar_path))
+        client.send(turn_bytes('mknod: %s\nFile exists' % tar_path))
+    elif str(t).isdigit():
+        if t != len(path_list)-1:
+            write_master_log('client %s: mknod %s: No such file or directory' %
+                             (addr, tar_path))
+            client.send(turn_bytes('mknod: %s\nNo such file or directory' %
+                                   tar_path))
+        else:
+            ifile = WfsFile(path_list[-1], con)
+            ifile.lock_init()
+            con.rwlock.write_lock()
+            con.files.append(ifile)
+            con.rwlock.write_unlock()
+            write_master_log('client %s: mknod %s: Done' % (addr, tar_path))
+            client.send(turn_bytes('mknod: %s\n' % tar_path))
     
+
+def do_write(client, addr):
+    """Get content and write into file"""
+    tar_path = client.recv(1024).decode('utf-8')
+    num = client.recv(1024).decode('utf-8')
+    path_list = split_path(tar_path)
+    t, con = check_path(path_list)
+
+    if t != 'file' or not num.isdigit():
+        write_master_log('client %s: write: error' % (addr))
+        client.send(turn_bytes('0001'))
+        return
+
+    block_size = common_cfg['block_size']
+    segs = []
+    num = int(num)
+    client.send(turn_bytes('1111'))
+    for i in range(0, num):
+        while True:
+            crc = client.recv(32).decode('utf-8')
+            seg = client.recv(block_size).decode('utf-8')
+            cal = calculate_crc(seg)
+            if cal == crc:
+                segs.append(seg)
+                client.send(turn_bytes('1111'))
+                break
+            else:
+                client.send(turn_bytes('0001'))
+
+    print(segs)
     
 

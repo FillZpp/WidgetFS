@@ -20,13 +20,28 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 import sys
 from widgetfs.conf.rwlock import RWLock
 
+
+class WfsDserver(object):
+    """Data server in Widget file system"""
+    def __init__(self, host):
+        self.host = host
+        self.alive = False
+
     
 class WfsChunk (object):
     """Chunk in Widget file system"""
-    def __init__ (self, num, version):
-        self.num = num
+    def __init__ (self, chid, version):
+        self.chid = chid
         self.version = version
         self.dserver_list = []
+        self.blocks = [0 for i in range(1000)]
+        self.rwlock = None
+
+    def lock_init(self):
+        self.rwlock = RWLock()
+
+    def lock_del(self):
+        self.rwlock = RWLock()
 
 
 class WfsFile (object):

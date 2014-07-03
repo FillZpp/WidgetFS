@@ -49,7 +49,6 @@ def check_meta():
     var_path = common_cfg['var_path']
     fs_meta_file = os.path.normpath(var_path + '/fs.meta')
     chuck_meta_file = os.path.normpath(var_path + '/chunk.meta')
-    
     try:
         with open(fs_meta_file, 'rb') as ff:
             WfsMeta.root_dir = pickle.load(ff)
@@ -63,6 +62,8 @@ def check_meta():
         pass
         
     init_all_locks(WfsMeta.root_dir)
+    for chunk in WfsMeta.chunk_list:
+        chunk.lock_init()
 
 
 def write_meta():
@@ -72,6 +73,8 @@ def write_meta():
     chunk_meta_file = os.path.normpath(var_path + '/chunk.meta')
 
     del_all_locks(WfsMeta.root_dir)
+    for chunk in WfsMeta.chunk_list:
+        chunk.lock_del()
     with open(fs_meta_file, 'wb') as ff:
         pickle.dump(WfsMeta.root_dir, ff)
     with open(chunk_meta_file, 'wb') as ff:
