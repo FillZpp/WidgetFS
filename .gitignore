@@ -57,4 +57,5 @@ log/*.log
 var/*.meta
 var/mrun/
 var/drun/
+var/data/
 
