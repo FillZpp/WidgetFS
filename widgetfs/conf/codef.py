@@ -21,13 +21,6 @@ import sys
 from widgetfs.conf.rwlock import RWLock
 
 
-class WfsDserver(object):
-    """Data server in Widget file system"""
-    def __init__(self, host):
-        self.host = host
-        self.alive = False
-
-    
 class WfsChunk (object):
     """Chunk in Widget file system"""
     def __init__ (self, chid, version):
@@ -41,7 +34,7 @@ class WfsChunk (object):
         self.rwlock = RWLock()
 
     def lock_del(self):
-        self.rwlock = RWLock()
+        self.rwlock = None
 
 
 class WfsFile (object):

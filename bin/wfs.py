@@ -28,7 +28,7 @@ from socket import *
 
 master_host = 'localhost'
 master_port = 12180
-block_size = 64*1024
+block_size = 64*1024 
 
 
 def turn_bytes(s):
@@ -170,6 +170,7 @@ def do_put(pars):
     tcp_client = get_connection()
     try:
         tcp_client.send(turn_bytes('0011'))
+        tcp_client.recv(4).decode('utf-8')
         tcp_client.send(turn_bytes(pars[1]))
         tcp_client.send(turn_bytes(str(num)))
         recv = tcp_client.recv(4).decode('utf-8')
@@ -194,6 +195,7 @@ def do_put(pars):
                 break
         
     tcp_client.close()
+    print('Put %s to Widget file system %s' % (pars[0], pars[1]))
 
 def main():
     if len(sys.argv) == 1:

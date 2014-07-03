@@ -52,6 +52,8 @@ class ClientThread (threading.Thread):
             handle_client_connection(self.client, self.addr)
         else:
             write_master_log('Not identified client %s.' % str(self.addr))
+            
+        self.client.close()
 
 
 class ListenClient (threading.Thread):

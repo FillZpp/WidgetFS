@@ -38,7 +38,7 @@ dserver_cfg = {
     'master_host': '',
     'dataserver_port': 12181,
     
-    'data_path': '/mnt/wfs',
+    'data_path': 'var/data/',
 }
     
 

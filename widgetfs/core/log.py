@@ -48,7 +48,7 @@ def write_master_log (content):
 def write_dserver_log (content):
     if not WfsLog.dserver_log:
         time_log = 'dataserver__' + get_time_log() + '.log'
-        WfsLog.master_log = os.path.normpath(os.getcwd() + '/log/' + time_log)
+        WfsLog.dserver_log = os.path.normpath(os.getcwd() + '/log/' + time_log)
         ft = 'w'
     else:
         ft = 'a'

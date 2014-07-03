@@ -216,6 +216,7 @@ def do_mknod (client, addr):
 
 def do_write(client, addr):
     """Get content and write into file"""
+    client.send(turn_bytes('1111'))
     tar_path = client.recv(1024).decode('utf-8')
     num = client.recv(1024).decode('utf-8')
     path_list = split_path(tar_path)
@@ -228,8 +229,10 @@ def do_write(client, addr):
 
     block_size = common_cfg['block_size']
     segs = []
+    crcs = []
     num = int(num)
     client.send(turn_bytes('1111'))
+
     for i in range(0, num):
         while True:
             crc = client.recv(32).decode('utf-8')
@@ -237,11 +240,22 @@ def do_write(client, addr):
             cal = calculate_crc(seg)
             if cal == crc:
                 segs.append(seg)
+                crcs.append(crc)
                 client.send(turn_bytes('1111'))
                 break
             else:
                 client.send(turn_bytes('0001'))
 
-    print(segs)
-    
+    pos_chunks = get_pos_chunks(num)
+    index = 0
+    stcs = []
+    for pos_chunk in pos_chunks:
+        sn = len(pos_chunk) - 1
+        stc = PushToChunk(pos_chunk[0], pos_chunks[1:],
+                          segs[index:index+sn], crcs[index:index+sn])
+        stc.start()
+        stcs.append(stc)
+        index += sn
+
+    write_master_log('client %s: write %s: Done' % (addr, tar_path))
 

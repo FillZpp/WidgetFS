@@ -20,12 +20,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 import os
 import pickle
 from widgetfs.conf.config import common_cfg
+from widgetfs.conf.rwlock import RWLock
 from widgetfs.conf.codef import *
 
 
 class WfsMeta(object):
     root_dir = WfsDir('/', '')
     chunk_list = []
+    rwlock = None
 
 
 def init_all_locks(ndir):
@@ -62,6 +64,7 @@ def check_meta():
         pass
         
     init_all_locks(WfsMeta.root_dir)
+    WfsMeta.rwlock = RWLock()
     for chunk in WfsMeta.chunk_list:
         chunk.lock_init()
 

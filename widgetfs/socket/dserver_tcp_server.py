@@ -17,6 +17,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 """
 
 
+import os
 import sys
 import time
 import signal
@@ -25,6 +26,7 @@ from socket import *
 from widgetfs.conf.config import common_cfg, dserver_cfg
 from widgetfs.conf.codef import turn_bytes
 from widgetfs.core.log import write_dserver_log
+from widgetfs.socket.handle_master import *
 
 
 tcpserver_for_master = socket(AF_INET, SOCK_STREAM)
@@ -36,11 +38,20 @@ dserver_port = dserver_cfg['dataserver_port']
 class MasterThread (threading.Thread):
     """Thread for master connection"""
     def __init__ (self, master, addr):
+        threading.Thread.__init__(self)
         self.master = master
         self.addr = addr
 
     def run (self):
-        print('get master connection %s' % self.addr)
+        data = self.master.recv(4).decode('utf-8')
+        if data == '0000':
+            write_dserver_log('Get connection with master')
+            self.master.send(turn_bytes('1111'))
+            handle_master_connection(self.master)
+        else:
+            write_dserver_log('Not identified message from master')
+
+        self.master.close()
 
 
 class ListenMaster (threading.Thread):
@@ -50,16 +61,15 @@ class ListenMaster (threading.Thread):
         try:
             tcpserver_for_master.bind(('', dserver_port))
             tcpserver_for_master.listen(common_cfg['max_listen'])
-
             while True:
                 master, addr = tcpserver_for_master.accept()
                 mthread = MasterThread(master, addr)
                 mthread.start()
-                mthreads.append(mthread)
+                self.mthreads.append(mthread)
 
-                for mthread in mthreads:
+                for mthread in self.mthreads:
                     if not mthread.isAlive():
-                        mthreads.remove(mthread)
+                        self.mthreads.remove(mthread)
                         mthread.join()
         except error:
             sys.stderr.write('Error:\n  error in listen master thread.\n' +
@@ -77,6 +87,14 @@ def handle_sigterm (a, b):
 def dserver_tcp_start ():
     """Loop in data server daemon process"""
     signal.signal(signal.SIGTERM, handle_sigterm)
+
+    data_path = dserver_cfg['data_path']
+    if not os.path.isdir(data_path):
+        try:
+            os.mkdir(data_path)
+        except PermissionError as e:
+            sys.stderr.write('Error:\n' + e.strerror + '\n')
+            sys.exit(1)
     
     # start to listen master
     listen_master = ListenMaster()
