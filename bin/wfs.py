@@ -26,6 +26,7 @@ from binascii import crc32
 from socket import *
 
 
+#master_host = 'narch64'
 master_host = 'localhost'
 master_port = 12180
 block_size = 64*1024 
