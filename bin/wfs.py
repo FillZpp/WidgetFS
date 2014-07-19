@@ -48,13 +48,13 @@ def print_help():
     """Print wfs help"""
     print('Widget file system client\n' +
           'Usage: wfs [option] ... [args]\n' +
+          '  ls          [file | directory]\n' +
           '  mkdir       [directory]\n' +
           '  rmdir       [directory]\n' +
           '  mknod       [file]\n' +
           '  cat         [file]\n' +
-          '  ls          [file | directory]\n' +
-          '  cp          [file | directory]\n' +
-          '  mv          [file | directory]\n' +
+          '  put         [file]\n' +
+          '  get         [file]\n' +
           '  rm          [file | directory]')
 
 
