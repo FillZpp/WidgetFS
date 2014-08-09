@@ -54,13 +54,13 @@ def check_meta():
     try:
         with open(fs_meta_file, 'rb') as ff:
             WfsMeta.root_dir = pickle.load(ff)
-    except FileNotFoundError:
+    except IOError:
         pass
         
     try:
         with open(chuck_meta_file, 'rb') as ff:
             WfsMeta.chunk_list = pickle.load(ff)
-    except FileNotFoundError:
+    except IOError:
         pass
         
     init_all_locks(WfsMeta.root_dir)
